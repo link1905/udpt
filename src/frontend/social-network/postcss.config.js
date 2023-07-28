@@ -1,6 +1,6 @@
 export default {
   plugins: {
-    '@tailwindcss/jit': {},
+    tailwindcss: {},
     autoprefixer: {},
   },
 }
