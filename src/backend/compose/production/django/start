@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+python /app/manage.py collectstatic --noinput
+python manage.py migrate --noinput --database=account
+python manage.py migrate --noinput --database=forum
+python manage.py migrate --noinput --database=tag
+
+python -OO -O main.py

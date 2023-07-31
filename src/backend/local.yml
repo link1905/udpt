@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+    udpt-django:
+        build:
+            context: .
+            dockerfile: ./compose/local/django/Dockerfile
+        container_name: udpt_dev
+        volumes:
+            - .:/app
+        env_file:
+            - ./.envs/.local/.django
+            - ./.envs/.local/.postgres
+        ports:
+            - 8000:8000
+        command: /start
+        depends_on:
+            udpt-postgres:
+                condition: service_healthy
+            udpt-redis:
+                condition: service_healthy
+
+    udpt-redis:
+        image: redis:alpine
+        container_name: udpt_redis_dev
+        healthcheck:
+            test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+
+    udpt-postgres:
+        build:
+            context: .
+            dockerfile: ./compose/local/postgres/Dockerfile
+        container_name: udpt_postgres_dev
+        command: postgres -c max_connections=100
+        volumes:
+            - udpt_db:/var/lib/postgresql/data:Z
+        env_file:
+            - ./.envs/.local/.postgres
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    udpt_db:

@@ -1,0 +1,87 @@
+version: "3.7"
+
+services:
+    udpt-django:
+        build:
+            context: .
+            dockerfile: ./compose/production/django/Dockerfile
+            args:
+                COMPOSE_UID: ${COMPOSE_UID}
+                COMPOSE_GID: ${COMPOSE_GID}
+        image: udpt
+        restart: always
+        volumes:
+            - type: volume
+              source: udpt_media
+              target: /app/media
+        env_file:
+            - ./.envs/.production/.django
+            - ./.envs/.production/.postgres
+        command: /start
+        depends_on:
+            udpt-postgres:
+                condition: service_healthy
+            udpt-redis:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: stop-first
+        user: "${COMPOSE_UID}:${COMPOSE_GID}"
+
+    udpt-redis:
+        image: redis:alpine
+        restart: always
+        healthcheck:
+            test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+        deploy:
+            mode: replicated
+            replicas: 1
+
+    udpt-postgres:
+        build:
+            context: .
+            dockerfile: ./compose/production/postgres/Dockerfile
+        image: udpt_postgres
+        restart: always
+        volumes:
+            - type: volume
+              source: udpt_db
+              target: /var/lib/postgresql/data
+        env_file:
+            - ./.envs/.production/.postgres
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        deploy:
+            mode: replicated
+            replicas: 1
+
+    udpt-nginx:
+        build:
+            context: .
+            dockerfile: ./compose/production/nginx/Dockerfile
+            args:
+                COMPOSE_UID: ${COMPOSE_UID}
+                COMPOSE_GID: ${COMPOSE_GID}
+        image: udpt_nginx
+        ports:
+            - 80:80
+        depends_on:
+            udpt-django:
+                condition: service_healthy
+        restart: always
+        deploy:
+            mode: replicated
+            replicas: 1
+
+volumes:
+    udpt_db:
+    udpt_media:

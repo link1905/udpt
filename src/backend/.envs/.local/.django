@@ -1,0 +1,6 @@
+USE_DOCKER=yes
+IPYTHONDIR=/app/.ipython
+SECRET_KEY=dummy
+CACHEOPS_ENABLED=True
+CACHE_URL=redis://udpt-redis:6379/0
+CACHEOPS_REDIS=redis://udpt-redis:6379/1
