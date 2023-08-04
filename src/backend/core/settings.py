@@ -23,6 +23,16 @@ def get_bool_from_env(name, default_value):
     return default_value
 
 
+USE_ACCOUNT_APP = get_bool_from_env("USE_ACCOUNT_APP", True)
+USE_TAG_APP = get_bool_from_env("USE_TAG_APP", True)
+USE_FORUM_APP = get_bool_from_env("USE_FORUM_APP", True)
+
+ACCOUNT_SERVICE_URL = os.environ.get(
+    "ACCOUNT_SERVICE_URL", "http://localhost:8000/api/"
+)
+TAG_SERVICE_URL = os.environ.get("TAG_SERVICE_URL", "http://localhost:8000/api/")
+FORUM_SERVICE_URL = os.environ.get("FORUM_SERVICE_URL", "http://localhost:8000/api/")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
@@ -32,20 +42,35 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "secret")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = get_bool_from_env("DEBUG", True)
 
-ALLOWED_HOSTS = get_list(os.environ.get("ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1"))
+ALLOWED_HOSTS = get_list(
+    os.environ.get(
+        "ALLOWED_HOSTS",
+        "localhost,0.0.0.0,127.0.0.1,udpt-account-django,udpt-tag-django,udpt-forum-django",
+    )
+)
 
 # Application definition
-
 INSTALLED_APPS = [
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
     "django.contrib.staticfiles",
     "corsheaders",
-    "multidbcontenttypes",
-    "taggit",
-    "account",
-    "forum",
 ]
+
+if USE_ACCOUNT_APP:
+    INSTALLED_APPS += [
+        "django.contrib.contenttypes",
+        "django.contrib.auth",
+        "account",
+    ]
+
+if USE_TAG_APP and not USE_ACCOUNT_APP:
+    INSTALLED_APPS += ["django.contrib.contenttypes"]
+
+if USE_TAG_APP:
+    INSTALLED_APPS += ["taggit"]
+
+if USE_FORUM_APP:
+    INSTALLED_APPS += ["forum"]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -74,38 +99,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+DATABASE_URL_ENV_NAME = os.environ.get("DATABASE_URL_ENV_NAME", "DATABASE_URL")
 
 DATABASES = {
-    "default": {},  # default database
-    "account": dj_database_url.config(
-        "ACCOUNT_DATABASE_URL",
+    "default": dj_database_url.config(
+        env=DATABASE_URL_ENV_NAME,
         default="sqlite:///:memory:",
         conn_max_age=600,
         conn_health_checks=True,
-    ),
-    "tag": dj_database_url.config(
-        "TAG_DATABASE_URL",
-        default="sqlite:///:memory:",
-        conn_max_age=600,
-        conn_health_checks=True,
-    ),
-    "forum": dj_database_url.config(
-        "FORUM_DATABASE_URL",
-        default="sqlite:///:memory:",
-        conn_max_age=600,
-        conn_health_checks=True,
-    ),
+    )
 }
-
-DATABASE_ROUTERS = [
-    "core.db_routers.TagRouter",
-    "account.db_routers.AccountRouter",
-    "forum.db_routers.ForumRouter",
-]
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -186,10 +191,10 @@ if CACHEOPS_ENABLED:
         "migrations.*": {"ops": (), "timeout": 0},
     }
 
-AUTH_USER_MODEL = "account.User"
+if USE_ACCOUNT_APP:
+    AUTH_USER_MODEL = "account.User"
 
-
-AUTHENTICATION_BACKENDS = [
-    "account.backends.JWTBackend",
-    "django.contrib.auth.backends.ModelBackend",
-]
+    AUTHENTICATION_BACKENDS = [
+        "account.backends.JWTBackend",
+        "django.contrib.auth.backends.ModelBackend",
+    ]

@@ -1,4 +1,4 @@
-from .docs import SPEC
+from core.docs import SPEC
 
 TAG_PROPERTIES = {
     "pk": {
@@ -28,6 +28,18 @@ SPEC.components.schema("TagResponse", {
     "properties": TAG_PROPERTIES,
 })
 
+SPEC.components.schema(
+    "TagCreateForm", 
+    {
+        "properties": {
+            "name": {
+                "type": "string",
+                "example": "testtag1",
+            },
+        },
+    },
+)
+
 
 SPEC.path(
     path="/models/tags/records/",
@@ -45,16 +57,6 @@ SPEC.path(
                     "schema": {
                         "type": "string",
                         "example": "testtag1",
-                    },
-                },
-                {
-                    "name": "thread",
-                    "in": "query",
-                    "description": "Filter by thread",
-                    "required": False,
-                    "schema": {
-                        "type": "integer",
-                        "example": 1,
                     },
                 },
             ],
@@ -81,9 +83,31 @@ SPEC.path(
                 },
             },
         },
+        "post": {
+            "tags": ["Tag"],
+            "summary": "Create tag",
+            "description": "Create tag",
+            "security": [{"jwt": []}],
+            "requestBody": {
+                "content": {
+                    "application/json": {
+                        "schema": "TagCreateForm",
+                    },
+                },
+            },
+            "responses": {
+                "201": {
+                    "description": "Create tag",
+                    "content": {
+                        "application/json": {
+                            "schema": "TagResponse",
+                        },
+                    },
+                },
+            },
+        },
     },
 )
-
 
 SPEC.path(
     path="/models/tags/records/{pk}/",

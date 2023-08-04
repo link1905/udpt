@@ -2,23 +2,22 @@ from django.http.request import HttpRequest
 from django.http.response import HttpResponse, JsonResponse
 from django.template import Template
 from django.template.context import make_context
-from django.urls import path, reverse
+from django.urls import path
 from django.views.decorators.cache import cache_page
 
 from core.docs import SPEC
 
-# @cache_page(31536000)
+@cache_page(31536000)
 def docs_json(*_) -> JsonResponse:
     return JsonResponse(SPEC.to_dict())
 
 
 @cache_page(31536000)
-def docs(request: HttpRequest) -> HttpResponse:
+def docs(_: HttpRequest) -> HttpResponse:
     context = make_context(
         {
-            "docs_json_url": reverse("docs-json"),
+            "docs_json_url": "./docs.json",
         },
-        request=request,
     )
 
     return HttpResponse(
@@ -29,7 +28,7 @@ def docs(request: HttpRequest) -> HttpResponse:
 
 urlpatterns = [
     path("docs/", docs, name="docs"),
-    path("docs.json", docs_json, name="docs-json"),
+    path("docs/docs.json", docs_json, name="docs-json"),
 ]
 
 

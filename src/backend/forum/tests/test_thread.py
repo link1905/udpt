@@ -1,58 +1,83 @@
-from account.test import AuthenticatedTestCase
+from account.test import LiveServerAuthenticatedTestCase
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import ContentType
 from django.urls import reverse
 from django.utils import timezone
-from forum.models import Thread, ThreadVote
+from forum.models import TaggedThread, Thread, ThreadVote
+from taggit.models import Tag
 
 User = get_user_model()
 
 
-class TestThreadAPI(AuthenticatedTestCase):
-    databases = ["account", "forum", "tag"]
-
+class TestThreadAPI(LiveServerAuthenticatedTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self.user_type = ContentType.objects.get_for_model(User)
+        self.tag1 = Tag.objects.create(name="tag1")
+        self.tag2 = Tag.objects.create(name="tag2")
 
         self.question = Thread.objects.create(
-            title="testthread", content="test", creator=self.user
+            title="testthread",
+            content="test",
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
         )
-        self.question.tags.add("test", "test2")
+        TaggedThread.objects.create(
+            thread=self.question,
+            tag_id=self.tag1.pk,
+        )
         self.answer = Thread.objects.create(
-            title="testthread", content="test", creator=self.user, parent=self.question
+            title="testthread",
+            content="test",
+            parent=self.question,
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
         )
         Thread.objects.create(
-            title="testthread", content="test", creator=self.user, parent=self.answer
+            title="testthread",
+            content="test",
+            parent=self.answer,
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
         )
 
         self.created_start = timezone.now()
         self.approved_question = Thread.objects.create(
             title="testthread staff",
             content="test",
-            creator=self.user,
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
             approved=True,
-            approver=self.staff,
+            approver_id=self.staff.id,
             approver_name=self.staff.get_full_name(),
             approver_email=self.staff.email,
         )
-        self.approved_question.tags.add("test3", "test4")
+        TaggedThread.objects.create(
+            thread=self.approved_question,
+            tag_id=self.tag2.pk,
+        )
         self.created_end = timezone.now()
         self.approved_answer = Thread.objects.create(
             title="testthread staff",
             content="test",
-            creator=self.user,
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
             parent=self.approved_question,
             approved=True,
-            approver=self.staff,
+            approver_id=self.staff.id,
             approver_name=self.staff.get_full_name(),
             approver_email=self.staff.email,
         )
         Thread.objects.create(
             title="testthread staff",
             content="test",
-            creator=self.user,
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
             parent=self.approved_answer,
         )
 
@@ -131,9 +156,7 @@ class TestThreadAPI(AuthenticatedTestCase):
         self.assertEqual(response.json()["fields"]["content"], "test")
         self.assertEqual(response.json()["fields"]["parent"], self.approved_question.pk)
         self.assertEqual(response.json()["fields"]["creator_id"], self.user.pk)
-        self.assertEqual(response.json()["fields"]["creator_type"], self.user_type.pk)
-        self.assertEqual(response.json()["fields"]["approver_type"], None)
-        self.assertEqual(response.json()["fields"]["approver_id"], None)
+        self.assertEqual(response.json()["fields"]["approver_id"], 0)
         self.assertEqual(response.json()["fields"]["approved"], False)
         self.assertEqual(response.json()["fields"]["approver_name"], "")
         self.assertEqual(response.json()["fields"]["approver_email"], "")
@@ -151,9 +174,7 @@ class TestThreadAPI(AuthenticatedTestCase):
         self.assertEqual(response.json()["fields"]["content"], "test")
         self.assertEqual(response.json()["fields"]["parent"], self.approved_question.pk)
         self.assertEqual(response.json()["fields"]["creator_id"], self.staff.pk)
-        self.assertEqual(response.json()["fields"]["creator_type"], self.user_type.pk)
-        self.assertEqual(response.json()["fields"]["approver_id"], None)
-        self.assertEqual(response.json()["fields"]["approver_type"], None)
+        self.assertEqual(response.json()["fields"]["approver_id"], 0)
         self.assertEqual(response.json()["fields"]["approved"], False)
         self.assertEqual(response.json()["fields"]["approver_name"], "")
         self.assertEqual(response.json()["fields"]["approver_email"], "")
@@ -183,7 +204,6 @@ class TestThreadAPI(AuthenticatedTestCase):
         self.assertEqual(response.json()["fields"]["title"], "testthread 2")
         self.assertEqual(response.json()["fields"]["content"], "test")
         self.assertEqual(response.json()["fields"]["approved"], True)
-        self.assertEqual(response.json()["fields"]["approver_type"], self.user_type.pk)
         self.assertEqual(response.json()["fields"]["approver_id"], self.staff.pk)
         self.assertEqual(
             response.json()["fields"]["approver_name"], self.staff.get_full_name()
@@ -203,7 +223,6 @@ class TestThreadAPI(AuthenticatedTestCase):
         self.assertEqual(response.json()["fields"]["title"], "testthread 2")
         self.assertEqual(response.json()["fields"]["content"], "test")
         self.assertEqual(response.json()["fields"]["approved"], True)
-        self.assertEqual(response.json()["fields"]["approver_type"], self.user_type.pk)
         self.assertEqual(response.json()["fields"]["approver_id"], self.staff.pk)
         self.assertEqual(
             response.json()["fields"]["approver_name"], self.staff.get_full_name()
@@ -230,9 +249,7 @@ class TestThreadAPI(AuthenticatedTestCase):
         self.assertEqual(response.json()["fields"]["content"], "test")
         self.assertEqual(response.json()["fields"]["parent"], old_parent)
         self.assertEqual(response.json()["fields"]["creator_id"], self.user.pk)
-        self.assertEqual(response.json()["fields"]["creator_type"], self.user_type.pk)
-        self.assertEqual(response.json()["fields"]["approver_id"], None)
-        self.assertEqual(response.json()["fields"]["approver_type"], None)
+        self.assertEqual(response.json()["fields"]["approver_id"], 0)
         self.assertEqual(response.json()["fields"]["approved"], False)
         self.assertEqual(response.json()["fields"]["approver_name"], "")
         self.assertEqual(response.json()["fields"]["approver_email"], "")
@@ -288,31 +305,33 @@ class TestThreadAPI(AuthenticatedTestCase):
         self.assertEqual(len(response.json()["results"]), 2)
         self.assertEqual(response.json()["count"], 2)
 
-    def test_filter_tag_names(self):
+    def test_filter_tag_ids(self):
         url = reverse("thread-list-create")
 
-        response = self.staff_client.get(url, {"tag_names": "test"})
+        tag = self.tag1
+
+        response = self.staff_client.get(url, {"tag_ids": tag.id})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 1)
         self.assertEqual(response.json()["count"], 1)
 
-    def test_filter_creator(self):
+    def test_filter_creator_id(self):
         url = reverse("thread-list-create")
 
-        response = self.staff_client.get(url, {"creator": self.user.pk})
+        response = self.staff_client.get(url, {"creator_id": self.user.pk})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 6)
         self.assertEqual(response.json()["count"], 6)
 
-        response = self.staff_client.get(url, {"creator": 2000})
+        response = self.staff_client.get(url, {"creator_id": 2000})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 0)
         self.assertEqual(response.json()["count"], 0)
 
-    def test_filter_approver(self):
+    def test_filter_approver_id(self):
         url = reverse("thread-list-create")
 
-        response = self.staff_client.get(url, {"approver": self.staff.pk})
+        response = self.staff_client.get(url, {"approver_id": self.staff.pk})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 2)
         self.assertEqual(response.json()["count"], 2)
@@ -328,7 +347,9 @@ class TestThreadAPI(AuthenticatedTestCase):
     def test_filter_order_count_votes(self):
         ThreadVote.objects.create(
             thread=self.question,
-            user=self.user,
+            user_id=self.user.pk,
+            user_name=self.user.get_full_name(),
+            user_email=self.user.email,
             is_upvote=True,
         )
 

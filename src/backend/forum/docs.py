@@ -20,13 +20,17 @@ THREAD_PROPERTIES = {
                 "type": "string",
                 "example": "I'm new to the forum and I don't know how to use it.",
             },
-            "creator_type": {
-                "type": "integer",
-                "example": 1,
-            },
             "creator_id": {
                 "type": "integer",
                 "example": 1,
+            },
+            "creator_name": {
+                "type": "string",
+                "example": "John Doe",
+            },
+            "creator_email": {
+                "type": "string",
+                "example": "example@gmail.com",
             },
             "parent": {
                 "type": "integer",
@@ -36,11 +40,6 @@ THREAD_PROPERTIES = {
             "approved": {
                 "type": "boolean",
                 "example": False,
-            },
-            "approver_type": {
-                "type": "integer",
-                "example": 1,
-                "nullable": True,
             },
             "approver_id": {
                 "type": "integer",
@@ -85,13 +84,17 @@ THREAD_VOTE_PROPERTIES = {
                 "type": "integer",
                 "example": 1,
             },
-            "user_type": {
-                "type": "integer",
-                "example": 1,
-            },
             "user_id": {
                 "type": "integer",
                 "example": 1,
+            },
+            "user_name": {
+                "type": "string",
+                "example": "John Doe",
+            },
+            "user_email": {
+                "type": "string",
+                "example": "example@gmail.com",
             },
             "is_upvote": {
                 "type": "boolean",
@@ -110,6 +113,34 @@ THREAD_VOTE_PROPERTIES = {
     },
 }
 
+TAGGED_THREAD_PROPERTIES = {
+    "pk": {
+        "type": "integer",
+        "example": 1,
+    },
+    "model": {
+        "type": "string",
+        "example": "forum.taggedthread",
+    },
+    "fields": {
+        "type": "object",
+        "properties": {
+            "thread": {
+                "type": "integer",
+                "example": 1,
+            },
+            "tag_id": {
+                "type": "integer",
+                "example": 1,
+            },
+            "tag_name": {
+                "type": "string",
+                "example": "django",
+            },
+        },
+    }
+}
+
 SPEC.components.schema(
     "ThreadResponse", 
     {
@@ -122,6 +153,13 @@ SPEC.components.schema(
     "ThreadVoteResponse",
     {
         "properties": THREAD_VOTE_PROPERTIES,
+    },
+)
+
+SPEC.components.schema(
+    "TaggedThreadResponse",
+    {
+        "properties": TAGGED_THREAD_PROPERTIES,
     },
 )
 
@@ -143,13 +181,6 @@ SPEC.components.schema(
                 "example": 1,
                 "nullable": True,
             },
-            "tags": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                    "example": "tag",
-                },
-            },
         },
     },
 )
@@ -166,13 +197,6 @@ SPEC.components.schema(
             "content": {
                 "type": "string",
                 "example": "I'm new to the forum and I don't know how to use it.",
-            },
-            "tags": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                    "example": "tag",
-                },
             },
             "approved": {
                 "type": "boolean",
@@ -208,6 +232,22 @@ SPEC.components.schema(
             "is_upvote": {
                 "type": "boolean",
                 "example": True,
+            },
+        },
+    },
+)
+
+SPEC.components.schema(
+    "TaggedThreadCreateForm",
+    {
+        "properties": {
+            "thread": {
+                "type": "integer",
+                "example": 1,
+            },
+            "tag_id": {
+                "type": "integer",
+                "example": 1,
             },
         },
     },
@@ -252,7 +292,7 @@ SPEC.path(
                     },
                 },
                 {
-                    "name": "creator",
+                    "name": "creator_id",
                     "in": "query",
                     "description": "Creator",
                     "required": False,
@@ -272,7 +312,7 @@ SPEC.path(
                     },
                 },
                 {
-                    "name": "approver",
+                    "name": "approver_id",
                     "in": "query",
                     "description": "Approver",
                     "required": False,
@@ -334,9 +374,9 @@ SPEC.path(
                     },
                 },
                 {
-                    "name": "tag_names",
+                    "name": "tag_ids",
                     "in": "query",
-                    "description": "Tag names",
+                    "description": "Tag ids",
                     "required": False,
                     "schema": {
                         "type": "array",
@@ -556,7 +596,7 @@ SPEC.path(
                     },
                 },
                 {
-                    "name": "user",
+                    "name": "user_id",
                     "in": "query",
                     "description": "User",
                     "required": False,
@@ -730,3 +770,163 @@ SPEC.path(
     },
 )
 
+SPEC.path(
+    path="/models/tagged-threads/records/",
+    operations={
+        "get": {
+            "tags": ["Tagged Threads"],
+            "summary": "List tagged threads.",
+            "description": "List tagged threads.",
+            "parameters": [
+                {
+                    "name": "limit",
+                    "in": "query",
+                    "description": "Limit",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 10,
+                    },
+                },
+                {
+                    "name": "offset",
+                    "in": "query",
+                    "description": "Offset",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 0,
+                    },
+                },
+                {
+                    "name": "thread",
+                    "in": "query",
+                    "description": "Thread",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+                {
+                    "name": "tag_id",
+                    "in": "query",
+                    "description": "Tag",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+            ],
+            "responses": {
+                "200": {
+                    "description": "List tagged threads.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 1,
+                                    },
+                                    "results": {
+                                        "type": "array",
+                                        "items": "TaggedThreadResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "post": {
+            "tags": ["Tagged Threads"],
+            "summary": "Create tagged thread.",
+            "description": "Create tagged thread.",
+            "security": [{"jwt": []}],
+            "requestBody": {
+                "description": "Tagged thread create form.",
+                "content": {
+                    "application/json": {
+                        "schema": "TaggedThreadCreateForm",
+                    },
+                    "application/x-www-form-urlencoded": {
+                        "schema": "TaggedThreadCreateForm",
+                    },
+                    "multipart/form-data": {
+                        "schema": "TaggedThreadCreateForm",
+                    },
+                },
+            },
+            "responses": {
+                "201": {
+                    "description": "Tagged thread created.",
+                    "content": {
+                        "application/json": {
+                            "schema": "TaggedThreadResponse",
+                        },
+                    },
+                },
+            },
+        },
+    }
+)
+
+SPEC.path(
+    path="/models/tagged-threads/records/{pk}/",
+    operations={
+        "get": {
+            "tags": ["Tagged Threads"],
+            "summary": "Retrieve tagged thread.",
+            "description": "Retrieve tagged thread.",
+            "parameters": [
+                {
+                    "name": "pk",
+                    "in": "path",
+                    "description": "Tagged thread primary key.",
+                    "required": True,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+            ],
+            "responses": {
+                "200": {
+                    "description": "Tagged thread retrieved.",
+                    "content": {
+                        "application/json": {
+                            "schema": "TaggedThreadResponse",
+                        },
+                    },
+                },
+            },
+        },
+        "delete": {
+            "tags": ["Tagged Threads"],
+            "summary": "Delete tagged thread.",
+            "description": "Delete tagged thread.",
+            "security": [{"jwt": []}],
+            "parameters": [
+                {
+                    "name": "pk",
+                    "in": "path",
+                    "description": "Tagged thread primary key.",
+                    "required": True,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+            ],
+            "responses": {
+                "204": {
+                    "description": "Tagged thread deleted.",
+                },
+            },
+        },
+    },
+)

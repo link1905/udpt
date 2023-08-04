@@ -7,13 +7,11 @@ User = get_user_model()
 
 
 class TestLogin(TestCase):
-    databases = ["account", "forum", "tag"]
-
     def setUp(self):
         self.client = Client()
 
     def test_login(self):
-        user = User.objects.create_user(
+        User.objects.create_user(
             username="testuser", password="testpass", is_active=True
         )
         url = reverse("login")

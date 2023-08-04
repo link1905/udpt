@@ -4,8 +4,6 @@ from django.urls import reverse
 
 
 class TestUserAPI(AuthenticatedTestCase):
-    databases = ["account", "forum", "tag"]
-
     def test_list(self):
         url = reverse("user-list-create")
 

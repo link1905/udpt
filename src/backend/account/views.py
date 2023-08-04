@@ -45,7 +45,6 @@ from djview.views import (
 User = get_user_model()
 
 USER_EXPOSED_FIELDS = (
-    "id",
     "username",
     "first_name",
     "last_name",

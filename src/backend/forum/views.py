@@ -1,9 +1,9 @@
 from typing import Any, Iterable, Optional, Tuple
 
+from account.services import authentication_layer, is_authenticated_layer
 from django.db import models
 from django.http.request import QueryDict
 from django.views.decorators.http import require_http_methods
-from djview.auth import USER_CONTEXT_KEY, authentication_layer, is_authenticated_layer
 from djview.context import Context
 from djview.crud import (
     create_service,
@@ -31,10 +31,11 @@ from djview.views import (
     into_service,
     method_layer,
 )
-from forum.filters import ThreadFilterSet, ThreadVoteFilterSet
-from forum.forms import ThreadForm, ThreadStaffForm, ThreadVoteForm
-from forum.models import Thread, ThreadVote
-from multidbcontenttypes.models import ContentType
+from forum.filters import TaggedThreadFilterSet, ThreadFilterSet, ThreadVoteFilterSet
+from forum.forms import TaggedThreadForm, ThreadForm, ThreadStaffForm, ThreadVoteForm
+from forum.models import TaggedThread, Thread, ThreadVote
+
+USER_CONTEXT_KEY = "__user__"
 
 
 def thread_django_filterer(
@@ -49,14 +50,14 @@ def thread_anonymous_filterer(*_: Any) -> Iterable[Any]:
 
 def thread_user_filterer(ctx: Context, _: Optional[Iterable[Any]]) -> Iterable[Any]:
     return Thread.objects.filter(
-        Thread.objects.live_q() | models.Q(creator_id=ctx[USER_CONTEXT_KEY].id)
+        Thread.objects.live_q() | models.Q(creator_id=ctx[USER_CONTEXT_KEY].pk)
     )
 
 
 def thread_only_user_filterer(
     ctx: Context, _: Optional[Iterable[Any]]
 ) -> Iterable[Any]:
-    return Thread.objects.filter(models.Q(creator_id=ctx[USER_CONTEXT_KEY].id))
+    return Thread.objects.filter(models.Q(creator_id=ctx[USER_CONTEXT_KEY].pk))
 
 
 def thread_vote_django_filterer(
@@ -73,14 +74,41 @@ def thread_vote_anonymous_filterer(*_: Any) -> Iterable[Any]:
 
 def thread_vote_user_filterer(ctx: Context, *_: Any) -> Iterable[Any]:
     return ThreadVote.objects.filter(
-        ThreadVote.objects.live_q() | models.Q(user_id=ctx[USER_CONTEXT_KEY].id)
+        ThreadVote.objects.live_q() | models.Q(user_id=ctx[USER_CONTEXT_KEY].pk)
     )
 
 
 def thread_vote_only_user_filterer(
     ctx: Context, _: Optional[Iterable[Any]]
 ) -> Iterable[Any]:
-    return ThreadVote.objects.filter(models.Q(user_id=ctx[USER_CONTEXT_KEY].id))
+    return ThreadVote.objects.filter(models.Q(user_id=ctx[USER_CONTEXT_KEY].pk))
+
+
+def tagged_thread_django_filterer(
+    ctx: Context, queryset: Optional[Iterable[Any]]
+) -> Iterable[Any]:
+    return TaggedThreadFilterSet(
+        ctx.request.GET, queryset=queryset, request=ctx.request
+    ).qs
+
+
+def tagged_thread_anonymous_filterer(*_: Any) -> Iterable[Any]:
+    return TaggedThread.objects.live()
+
+
+def tagged_thread_user_filterer(ctx: Context, *_: Any) -> Iterable[Any]:
+    return TaggedThread.objects.filter(
+        TaggedThread.objects.live_q()
+        | models.Q(thread__creator_id=ctx[USER_CONTEXT_KEY].pk)
+    )
+
+
+def tagged_thread_only_user_filterer(
+    ctx: Context, _: Optional[Iterable[Any]]
+) -> Iterable[Any]:
+    return TaggedThread.objects.filter(
+        models.Q(thread__creator_id=ctx[USER_CONTEXT_KEY].pk)
+    )
 
 
 def thread_parser(ctx: Context) -> Optional[Tuple[dict, dict]]:
@@ -100,13 +128,14 @@ def thread_parser(ctx: Context) -> Optional[Tuple[dict, dict]]:
     if isinstance(data, QueryDict):
         data._mutable = True
 
-    user_type = ContentType.objects.get_for_model(ctx[USER_CONTEXT_KEY])
     data.update(
         {
-            "creator_type": user_type.id,
-            "creator_id": ctx[USER_CONTEXT_KEY].id,
-            "approver_type": user_type.id,
-            "approver_id": ctx[USER_CONTEXT_KEY].id,
+            "creator_id": ctx[USER_CONTEXT_KEY].pk,
+            "creator_name": ctx[USER_CONTEXT_KEY].fields.get_full_name(),
+            "creator_email": ctx[USER_CONTEXT_KEY].fields.email,
+            "approver_id": ctx[USER_CONTEXT_KEY].pk,
+            "approver_name": ctx[USER_CONTEXT_KEY].fields.get_full_name(),
+            "approver_email": ctx[USER_CONTEXT_KEY].fields.email,
         }
     )
 
@@ -133,11 +162,11 @@ def thread_vote_parser(ctx: Context) -> Optional[Tuple[dict, dict]]:
     if isinstance(data, QueryDict):
         data._mutable = True
 
-    user_type = ContentType.objects.get_for_model(ctx[USER_CONTEXT_KEY])
     data.update(
         {
-            "user_type": user_type.id,
-            "user_id": ctx[USER_CONTEXT_KEY].id,
+            "user_id": ctx[USER_CONTEXT_KEY].pk,
+            "user_name": ctx[USER_CONTEXT_KEY].fields.get_full_name(),
+            "user_email": ctx[USER_CONTEXT_KEY].fields.email,
         }
     )
 
@@ -147,15 +176,40 @@ def thread_vote_parser(ctx: Context) -> Optional[Tuple[dict, dict]]:
     return data, files
 
 
+def tagged_thread_parser(ctx: Context) -> Optional[Tuple[dict, dict]]:
+    data, files = {}, {}
+    for parser in (
+        json_parser,
+        multi_part_parser,
+        urlencoded_form_parser,
+    ):
+        result = parser(ctx)
+        if result is None:
+            continue
+
+        data, files = result
+        break
+
+    if isinstance(data, QueryDict):
+        data._mutable = True
+
+    data.update({"creator_id": ctx[USER_CONTEXT_KEY].pk})
+
+    if isinstance(data, QueryDict):
+        data._mutable = False
+
+    return data, files
+
+
 thread_list_create_view = context_view()(
     into_service(
-        # exception_layer(),
+        exception_layer(),
         from_http_decorator(require_http_methods(["GET", "POST"])),
         authentication_layer(),
         method_layer(
             "GET",
             case_layer(
-                lambda ctx: not ctx[USER_CONTEXT_KEY].is_authenticated,
+                lambda ctx: not ctx[USER_CONTEXT_KEY],
                 service=list_service(
                     model_list_serializer(),
                     thread_anonymous_filterer,
@@ -165,8 +219,8 @@ thread_list_create_view = context_view()(
                 ),
             ),  # anonymous
             case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
                 service=list_service(
                     model_list_serializer(),
                     model_all_filterer(Thread),
@@ -199,7 +253,7 @@ thread_detail_update_delete_view = context_view()(
         method_layer(
             "GET",
             case_layer(
-                lambda ctx: not ctx[USER_CONTEXT_KEY].is_authenticated,
+                lambda ctx: not ctx[USER_CONTEXT_KEY],
                 service=detail_service(
                     model_serializer(),
                     thread_anonymous_filterer,
@@ -208,8 +262,8 @@ thread_detail_update_delete_view = context_view()(
                 ),
             ),  # anonymous
             case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
                 service=detail_service(
                     model_serializer(),
                     model_all_filterer(Thread),
@@ -228,8 +282,8 @@ thread_detail_update_delete_view = context_view()(
         method_layer(
             "PUT",
             case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
                 service=update_service(
                     model_mutator(ThreadStaffForm, thread_parser),
                     model_serializer(),
@@ -247,8 +301,8 @@ thread_detail_update_delete_view = context_view()(
             ),  # normal users
         ),
         case_layer(
-            lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-            or ctx[USER_CONTEXT_KEY].is_superuser,
+            lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+            or ctx[USER_CONTEXT_KEY].fields.is_superuser,
             service=delete_service(
                 model_delete_mutator,
                 model_all_filterer(Thread),
@@ -273,7 +327,7 @@ thread_vote_list_create_view = context_view()(
         method_layer(
             "GET",
             case_layer(
-                lambda ctx: not ctx[USER_CONTEXT_KEY].is_authenticated,
+                lambda ctx: not ctx[USER_CONTEXT_KEY],
                 service=list_service(
                     model_list_serializer(),
                     thread_vote_anonymous_filterer,
@@ -283,8 +337,8 @@ thread_vote_list_create_view = context_view()(
                 ),
             ),  # staffs
             case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
                 service=list_service(
                     model_list_serializer(),
                     model_all_filterer(ThreadVote),
@@ -317,7 +371,7 @@ thread_vote_detail_update_delete_view = context_view()(
         method_layer(
             "GET",
             case_layer(
-                lambda ctx: not ctx[USER_CONTEXT_KEY].is_authenticated,
+                lambda ctx: not ctx[USER_CONTEXT_KEY],
                 service=detail_service(
                     model_serializer(),
                     thread_vote_anonymous_filterer,
@@ -326,8 +380,8 @@ thread_vote_detail_update_delete_view = context_view()(
                 ),
             ),  # staffs
             case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
                 service=detail_service(
                     model_serializer(),
                     model_all_filterer(ThreadVote),
@@ -346,8 +400,8 @@ thread_vote_detail_update_delete_view = context_view()(
         method_layer(
             "PUT",
             case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
                 service=update_service(
                     model_mutator(ThreadVoteForm, thread_vote_parser),
                     model_serializer(),
@@ -365,8 +419,8 @@ thread_vote_detail_update_delete_view = context_view()(
             ),  # normal users
         ),
         case_layer(
-            lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-            or ctx[USER_CONTEXT_KEY].is_superuser,
+            lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+            or ctx[USER_CONTEXT_KEY].fields.is_superuser,
             service=delete_service(
                 model_delete_mutator,
                 model_all_filterer(ThreadVote),
@@ -381,4 +435,101 @@ thread_vote_detail_update_delete_view = context_view()(
             model_pk_filterer(),
         ),  # normal users
     )
+)
+
+tagged_thread_list_create_view = context_view()(
+    into_service(
+        exception_layer(),
+        from_http_decorator(require_http_methods(["GET", "POST"])),
+        authentication_layer(),
+        method_layer(
+            "GET",
+            case_layer(
+                lambda ctx: not ctx[USER_CONTEXT_KEY],
+                service=list_service(
+                    model_list_serializer(),
+                    tagged_thread_anonymous_filterer,
+                    tagged_thread_django_filterer,
+                    model_set_meta_count_filterer(),
+                    limit_offset_filterer(),
+                ),
+            ),  # anonymous
+            case_layer(
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
+                service=list_service(
+                    model_list_serializer(),
+                    model_all_filterer(TaggedThread),
+                    tagged_thread_django_filterer,
+                    model_set_meta_count_filterer(),
+                    limit_offset_filterer(),
+                ),
+            ),  # staffs
+            service=list_service(
+                model_list_serializer(),
+                tagged_thread_user_filterer,
+                tagged_thread_django_filterer,
+                model_set_meta_count_filterer(),
+                limit_offset_filterer(),
+            ),  # normal users
+        ),
+        is_authenticated_layer(),
+        service=create_service(
+            model_mutator(TaggedThreadForm, tagged_thread_parser),
+            model_serializer(),
+        ),
+    ),
+)
+
+tagged_thread_detail_delete_view = context_view()(
+    into_service(
+        exception_layer(),
+        from_http_decorator(require_http_methods(["GET", "DELETE"])),
+        authentication_layer(),
+        method_layer(
+            "GET",
+            case_layer(
+                lambda ctx: not ctx[USER_CONTEXT_KEY],
+                service=detail_service(
+                    model_serializer(),
+                    tagged_thread_anonymous_filterer,
+                    tagged_thread_django_filterer,
+                    model_pk_filterer(),
+                ),
+            ),  # anonymous
+            case_layer(
+                lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+                or ctx[USER_CONTEXT_KEY].fields.is_superuser,
+                service=detail_service(
+                    model_serializer(),
+                    model_all_filterer(TaggedThread),
+                    tagged_thread_django_filterer,
+                    model_pk_filterer(),
+                ),
+            ),  # staffs
+            service=detail_service(
+                model_serializer(),
+                tagged_thread_user_filterer,
+                tagged_thread_django_filterer,
+                model_pk_filterer(),
+            ),  # normal users
+        ),
+        is_authenticated_layer(),
+        case_layer(
+            lambda ctx: ctx[USER_CONTEXT_KEY].fields.is_staff
+            or ctx[USER_CONTEXT_KEY].fields.is_superuser,
+            service=delete_service(
+                model_delete_mutator,
+                model_all_filterer(TaggedThread),
+                tagged_thread_django_filterer,
+                model_pk_filterer(),
+            ),
+        ),  # staffs
+        service=delete_service(
+            model_delete_mutator,
+            tagged_thread_only_user_filterer,
+            tagged_thread_django_filterer,
+            model_pk_filterer(),
+        ),
+    ),
 )

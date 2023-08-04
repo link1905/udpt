@@ -11,8 +11,20 @@ urlpatterns = [
         cache_page(31536000)(serve),
         kwargs={"document_root": settings.MEDIA_ROOT},
     ),
-    path("api/", include("core.tag_urls")),
     path("api/", include("core.docs_urls")),
-    path("api/", include("account.urls")),
-    path("api/", include("forum.urls")),
 ]
+
+if settings.USE_ACCOUNT_APP:
+    urlpatterns += [
+        path("api/", include("account.urls")),
+    ]
+
+if settings.USE_TAG_APP:
+    urlpatterns += [
+        path("api/", include("tag.urls")),
+    ]
+
+if settings.USE_FORUM_APP:
+    urlpatterns += [
+        path("api/", include("forum.urls")),
+    ]

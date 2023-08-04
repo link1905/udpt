@@ -1,49 +1,51 @@
-from account.test import AuthenticatedTestCase
+from account.test import LiveServerAuthenticatedTestCase
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import ContentType
 from django.urls import reverse
 from forum.models import Thread, ThreadVote
 
 User = get_user_model()
 
 
-class TestThreadVoteAPI(AuthenticatedTestCase):
-    databases = ["account", "forum", "tag"]
-
+class TestThreadVoteAPI(LiveServerAuthenticatedTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self.user_type = ContentType.objects.get_for_model(User)
         self.question = Thread.objects.create(
-            title="testthread", content="test", creator=self.user
+            title="testthread",
+            content="test",
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
         )
         self.approved_question = Thread.objects.create(
             title="testthread staff",
             content="test",
-            creator=self.user,
+            creator_id=self.user.id,
+            creator_name=self.user.get_full_name(),
+            creator_email=self.user.email,
             approved=True,
-            approver=self.staff,
+            approver_id=self.staff.id,
             approver_name=self.staff.get_full_name(),
             approver_email=self.staff.email,
         )
 
         self.vote = ThreadVote.objects.create(
             thread=self.question,
-            user=self.user,
+            user_id=self.user.id,
             user_name=self.user.get_full_name(),
             user_email=self.user.email,
             is_upvote=False,
         )
         self.vote2 = ThreadVote.objects.create(
             thread=self.question,
-            user=self.staff,
+            user_id=self.staff.id,
             user_name=self.staff.get_full_name(),
             user_email=self.staff.email,
             is_upvote=False,
         )
         self.approved_vote = ThreadVote.objects.create(
             thread=self.approved_question,
-            user=self.user,
+            user_id=self.user.id,
             user_name=self.user.get_full_name(),
             user_email=self.user.email,
         )
@@ -105,7 +107,6 @@ class TestThreadVoteAPI(AuthenticatedTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["fields"]["thread"], self.approved_question.pk)
         self.assertEqual(response.json()["fields"]["user_id"], self.user.pk)
-        self.assertEqual(response.json()["fields"]["user_type"], self.user_type.pk)
         self.assertEqual(
             response.json()["fields"]["user_name"], self.user.get_full_name()
         )
@@ -175,7 +176,7 @@ class TestThreadVoteAPI(AuthenticatedTestCase):
     def test_filter_user(self):
         url = reverse("thread-vote-list-create")
 
-        response = self.staff_client.get(url, {"user": self.user.pk})
+        response = self.staff_client.get(url, {"user_id": self.user.pk})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()["results"]), 2)
 

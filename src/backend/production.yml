@@ -1,13 +1,10 @@
 version: "3.7"
 
 services:
-    udpt-django:
+    udpt-account-django:
         build:
             context: .
             dockerfile: ./compose/production/django/Dockerfile
-            args:
-                COMPOSE_UID: ${COMPOSE_UID}
-                COMPOSE_GID: ${COMPOSE_GID}
         image: udpt
         restart: always
         volumes:
@@ -17,6 +14,14 @@ services:
         env_file:
             - ./.envs/.production/.django
             - ./.envs/.production/.postgres
+        environment:
+            - USE_ACCOUNT_APP=True
+            - USE_TAG_APP=False
+            - USE_FORUM_APP=False
+            - DATABASE_URL_ENV_NAME=ACCOUNT_DATABASE_URL
+            - ACCOUNT_SERVICE_URL=http://udpt-account-django:8000/api/
+            - TAG_SERVICE_URL=http://udpt-tag-django:8000/api/
+            - FORUM_SERVICE_URL=http://udpt-forum-django:8000/api/
         command: /start
         depends_on:
             udpt-postgres:
@@ -32,7 +37,81 @@ services:
                 parallelism: 1
                 delay: 10s
                 order: stop-first
-        user: "${COMPOSE_UID}:${COMPOSE_GID}"
+
+    udpt-tag-django:
+        build:
+            context: .
+            dockerfile: ./compose/production/django/Dockerfile
+        image: udpt
+        restart: always
+        volumes:
+            - type: volume
+              source: udpt_media
+              target: /app/media
+        env_file:
+            - ./.envs/.production/.django
+            - ./.envs/.production/.postgres
+        environment:
+            - USE_ACCOUNT_APP=False
+            - USE_TAG_APP=True
+            - USE_FORUM_APP=False
+            - DATABASE_URL_ENV_NAME=TAG_DATABASE_URL
+            - ACCOUNT_SERVICE_URL=http://udpt-account-django:8000/api/
+            - TAG_SERVICE_URL=http://udpt-tag-django:8000/api/
+            - FORUM_SERVICE_URL=http://udpt-forum-django:8000/api/
+        command: /start
+        depends_on:
+            udpt-postgres:
+                condition: service_healthy
+            udpt-redis:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: stop-first
+
+    udpt-forum-django:
+        build:
+            context: .
+            dockerfile: ./compose/production/django/Dockerfile
+        image: udpt
+        restart: always
+        volumes:
+            - type: volume
+              source: udpt_media
+              target: /app/media
+        env_file:
+            - ./.envs/.production/.django
+            - ./.envs/.production/.postgres
+        environment:
+            - USE_ACCOUNT_APP=False
+            - USE_TAG_APP=False
+            - USE_FORUM_APP=True
+            - DATABASE_URL_ENV_NAME=FORUM_DATABASE_URL
+            - ACCOUNT_SERVICE_URL=http://udpt-account-django:8000/api/
+            - TAG_SERVICE_URL=http://udpt-tag-django:8000/api/
+            - FORUM_SERVICE_URL=http://udpt-forum-django:8000/api/
+        command: /start
+        depends_on:
+            udpt-postgres:
+                condition: service_healthy
+            udpt-redis:
+                condition: service_healthy
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+        deploy:
+            mode: replicated
+            replicas: 1
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: stop-first
+
 
     udpt-redis:
         image: redis:alpine
@@ -68,14 +147,15 @@ services:
         build:
             context: .
             dockerfile: ./compose/production/nginx/Dockerfile
-            args:
-                COMPOSE_UID: ${COMPOSE_UID}
-                COMPOSE_GID: ${COMPOSE_GID}
         image: udpt_nginx
         ports:
             - 80:80
         depends_on:
-            udpt-django:
+            udpt-account-django:
+                condition: service_healthy
+            udpt-tag-django:
+                condition: service_healthy
+            udpt-forum-django:
                 condition: service_healthy
         restart: always
         deploy:

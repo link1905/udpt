@@ -9,9 +9,6 @@ FROM python:3.11-slim-buster
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-ARG COMPOSE_UID=1001
-ARG COMPOSE_GID=1001
-
 RUN apt-get update \
   # dependencies for building Python packages
   && apt-get install -y build-essential \
@@ -36,21 +33,15 @@ COPY ./requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt \
     && rm -rf /requirements.txt
 
-COPY --chown=${COMPOSE_UID}:${COMPOSE_GID} ./compose/production/django/entrypoint /entrypoint
+COPY ./compose/production/django/entrypoint /entrypoint
 RUN sed -i 's/\r$//g' /entrypoint
 RUN chmod +x /entrypoint
 
-COPY --chown=${COMPOSE_UID}:${COMPOSE_GID} ./compose/production/django/start /start
+COPY ./compose/production/django/start /start
 RUN sed -i 's/\r$//g' /start
 RUN chmod +x /start
 
-COPY --from=client-builder --chown=${COMPOSE_UID}:${COMPOSE_GID} /app /app
-
-RUN mkdir -p /app/media
-
-RUN chown -R ${COMPOSE_UID}:${COMPOSE_GID} /app/media
-
-USER ${COMPOSE_UID}:${COMPOSE_GID}
+COPY --from=client-builder /app /app
 
 WORKDIR /app
 

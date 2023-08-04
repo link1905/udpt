@@ -1,6 +1,6 @@
 import django_filters
 from django.db import models
-from forum.models import Thread, ThreadQuerySet
+from forum.models import TaggedThread, Thread, ThreadQuerySet
 
 
 class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
@@ -9,8 +9,10 @@ class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
 
 class ThreadFilterSet(django_filters.FilterSet):
     search = django_filters.CharFilter(field_name="title", lookup_expr="icontains")
-    creator = django_filters.NumberFilter(field_name="creator_id", lookup_expr="exact")
-    approver = django_filters.NumberFilter(
+    creator_id = django_filters.NumberFilter(
+        field_name="creator_id", lookup_expr="exact"
+    )
+    approver_id = django_filters.NumberFilter(
         field_name="approver_id", lookup_expr="exact"
     )
     parent = django_filters.NumberFilter(field_name="parent_id", lookup_expr="exact")
@@ -18,7 +20,7 @@ class ThreadFilterSet(django_filters.FilterSet):
     is_question = django_filters.BooleanFilter(method="filter_is_question")
     is_answer = django_filters.BooleanFilter(method="filter_is_answer")
     is_pending = django_filters.BooleanFilter(method="filter_is_pending")
-    tag_names = CharInFilter(method="filter_tag_names")
+    tag_ids = CharInFilter(field_name="tags__tag_id")
     order = django_filters.OrderingFilter(
         fields=(("count_votes", "count_votes"),), method="filter_order"
     )
@@ -39,11 +41,6 @@ class ThreadFilterSet(django_filters.FilterSet):
         self, queryset: ThreadQuerySet, _: str, value: bool
     ) -> ThreadQuerySet:
         return queryset.pending() if value else queryset.live()
-
-    def filter_tag_names(
-        self, queryset: ThreadQuerySet, _: str, value: list[str]
-    ) -> ThreadQuerySet:
-        return queryset.tag_names(*value)
 
     def filter_order(
         self, queryset: ThreadQuerySet, _: str, value: list[str]
@@ -70,21 +67,21 @@ class ThreadFilterSet(django_filters.FilterSet):
         model = Thread
         fields = (
             "search",
-            "creator",
-            "approver",
+            "creator_id",
+            "approver_id",
             "parent",
             "created",
             "is_question",
             "is_answer",
             "is_pending",
-            "tag_names",
+            "tag_ids",
             "order",
         )
 
 
 class ThreadVoteFilterSet(django_filters.FilterSet):
     thread = django_filters.NumberFilter(field_name="thread_id", lookup_expr="exact")
-    user = django_filters.NumberFilter(field_name="user_id", lookup_expr="exact")
+    user_id = django_filters.NumberFilter(field_name="user_id", lookup_expr="exact")
     is_upvote = django_filters.BooleanFilter(
         field_name="is_upvote", lookup_expr="exact"
     )
@@ -93,6 +90,18 @@ class ThreadVoteFilterSet(django_filters.FilterSet):
         model = Thread
         fields = (
             "thread",
-            "user",
+            "user_id",
             "is_upvote",
+        )
+
+
+class TaggedThreadFilterSet(django_filters.FilterSet):
+    tag_id = django_filters.NumberFilter(field_name="tag_id", lookup_expr="exact")
+    thread = django_filters.NumberFilter(field_name="thread_id", lookup_expr="exact")
+
+    class Meta:
+        model = TaggedThread
+        fields = (
+            "tag_id",
+            "thread",
         )

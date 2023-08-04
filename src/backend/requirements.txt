@@ -12,3 +12,5 @@ django-filter==23.2
 git+https://github.com/TcMits/djview.git@v0.2.0
 apispec==6.3
 bjoern==3.2.2
+dataclasses-json==v0.5.14
+requests==2.31

@@ -1,6 +1,5 @@
 from core.docs import SPEC
 
-JWT_SCHEME = {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
 
 USER_PROPERTIES = {
     "pk": {
@@ -67,9 +66,6 @@ SPEC.components.schema(
         "properties": USER_PROPERTIES,
     },
 )
-
-
-SPEC.components.security_scheme("jwt", JWT_SCHEME)
 
 
 SPEC.components.schema(
