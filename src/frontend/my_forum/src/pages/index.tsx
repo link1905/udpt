@@ -5,11 +5,14 @@ import { CreateQuestionPage } from "./question/create.tsx";
 import { ViewQuestionPage } from "./question/view.tsx";
 import { ListQuestionPage } from "./question/list.tsx";
 import { HomePage } from "./home.tsx";
+import LogIn from "./sign_in/LogIn.tsx";
+import SignUp from "./sign_up/SignUp.tsx";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
+
     children: [
       {
         path: "/",
@@ -26,6 +29,14 @@ export const router = createBrowserRouter([
       {
         path: "/question",
         element: <ListQuestionPage />,
+      },
+      {
+        path: "/signin",
+        element: <LogIn />,
+      },
+      {
+        path: "/signup",
+        element: <SignUp />,
       },
     ],
   },

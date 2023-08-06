@@ -13,8 +13,10 @@ export function HomePage() {
             <NavLink to="/question">Question list</NavLink>
           </List.Item>
           <List.Item> */}
-            <NavLink to="/question/id">Question detail</NavLink>
-          {/* </List.Item>
+      <NavLink to="/question/id">Question detail</NavLink>
+      <br></br>
+      <NavLink to="/signin">SIGN IN</NavLink>
+      {/* </List.Item>
           <List.Item>
             <NavLink to="/question/create">Create question</NavLink>
           </List.Item>
@@ -101,7 +103,7 @@ export function HomePage() {
               <Tabs.Panel value="all" pt="xs" className="">
                 <div className="flex mt-5">
                   <Card
-                   className="mr-4"
+                    className="mr-4"
                     withBorder
                     radius={7}
                     shadow="sm"
@@ -124,7 +126,6 @@ export function HomePage() {
                   </Card>
 
                   <Card
-                 
                     withBorder
                     radius={7}
                     shadow="sm"
