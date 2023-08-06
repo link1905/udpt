@@ -7,6 +7,8 @@ from .views import (
     thread_list_create_view,
     thread_vote_detail_update_delete_view,
     thread_vote_list_create_view,
+    thread_category_list_create_view,
+    thread_category_detail_update_delete_view,
 )
 
 urlpatterns = [
@@ -35,6 +37,16 @@ urlpatterns = [
         "models/tagged-threads/records/<int:pk>/",
         tagged_thread_detail_delete_view,
         name="tagged-thread-detail-delete",
+    ),
+    path(
+        "models/thread-categories/records/",
+        thread_category_list_create_view,
+        name="thread-category-list-create",
+    ),
+    path(
+        "models/thread-categories/records/<int:pk>/",
+        thread_category_detail_update_delete_view,
+        name="thread-category-detail-update-delete",
     ),
 ]
 

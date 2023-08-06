@@ -1,6 +1,6 @@
 import django_filters
 from django.db import models
-from forum.models import TaggedThread, Thread, ThreadQuerySet
+from forum.models import TaggedThread, Thread, ThreadQuerySet, ThreadCategory
 
 
 class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
@@ -24,6 +24,7 @@ class ThreadFilterSet(django_filters.FilterSet):
     order = django_filters.OrderingFilter(
         fields=(("count_votes", "count_votes"),), method="filter_order"
     )
+    category = django_filters.NumberFilter(method="filter_category")
 
     def filter_is_question(
         self, queryset: ThreadQuerySet, _: str, value: bool
@@ -63,6 +64,9 @@ class ThreadFilterSet(django_filters.FilterSet):
 
         return queryset
 
+    def filter_category(self, queryset: ThreadQuerySet, _: str, value: int) -> ThreadQuerySet:
+        return queryset.category(value)
+
     class Meta:
         model = Thread
         fields = (
@@ -76,6 +80,7 @@ class ThreadFilterSet(django_filters.FilterSet):
             "is_pending",
             "tag_ids",
             "order",
+            "category",
         )
 
 
@@ -104,4 +109,13 @@ class TaggedThreadFilterSet(django_filters.FilterSet):
         fields = (
             "tag_id",
             "thread",
+        )
+
+class ThreadCategoryFilterSet(django_filters.FilterSet):
+    search = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
+
+    class Meta:
+        model = ThreadCategory
+        fields = (
+            "search",
         )

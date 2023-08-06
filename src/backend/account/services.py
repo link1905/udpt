@@ -99,3 +99,10 @@ def is_authenticated_layer(user_ctx_key: str = USER_CONTEXT_KEY) -> Layer:
         return ctx[user_ctx_key] is not None
 
     return permission_layer(rule)
+
+
+def is_staff_layer(user_ctx_key: str = USER_CONTEXT_KEY) -> Layer:
+    def rule(ctx: Context) -> bool:
+        return ctx[user_ctx_key].fields.is_staff
+
+    return permission_layer(rule)

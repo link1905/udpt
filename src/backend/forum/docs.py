@@ -64,6 +64,10 @@ THREAD_PROPERTIES = {
                 "format": "date-time",
                 "example": "2021-01-01T00:00:00Z",
             },
+            "thread": {
+                "type": "integer",
+                "example": 1,
+            }
         },
     }
 }
@@ -137,9 +141,51 @@ TAGGED_THREAD_PROPERTIES = {
                 "type": "string",
                 "example": "django",
             },
+            "created": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2021-01-01T00:00:00Z",
+            },
+            "updated": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2021-01-01T00:00:00Z",
+            },
         },
     }
 }
+
+
+THREAD_CATEGORY_PROPERTIES = {
+    "pk": {
+        "type": "integer",
+        "example": 1,
+    },
+    "model": {
+        "type": "string",
+        "example": "forum.threadcategory",
+    },
+    "fields": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "example": "General",
+            },
+            "created": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2021-01-01T00:00:00Z",
+            },
+            "updated": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2021-01-01T00:00:00Z",
+            },
+        },
+    },
+}
+
 
 SPEC.components.schema(
     "ThreadResponse", 
@@ -149,6 +195,7 @@ SPEC.components.schema(
 )
 
 
+
 SPEC.components.schema(
     "ThreadVoteResponse",
     {
@@ -156,10 +203,19 @@ SPEC.components.schema(
     },
 )
 
+
 SPEC.components.schema(
     "TaggedThreadResponse",
     {
         "properties": TAGGED_THREAD_PROPERTIES,
+    },
+)
+
+
+SPEC.components.schema(
+    "ThreadCategoryResponse",
+    {
+        "properties": THREAD_CATEGORY_PROPERTIES,
     },
 )
 
@@ -181,6 +237,11 @@ SPEC.components.schema(
                 "example": 1,
                 "nullable": True,
             },
+            "category": {
+                "type": "integer",
+                "example": 1,
+                "nullable": True,
+            }
         },
     },
 )
@@ -252,6 +313,20 @@ SPEC.components.schema(
         },
     },
 )
+
+SPEC.components.schema(
+    "ThreadCategoryForm",
+    {
+        "properties": {
+            "name": {
+                "type": "string",
+                "example": "General",
+            },
+        },
+    },
+)
+
+
 
 SPEC.path(
     path="/models/threads/records/",
@@ -384,6 +459,16 @@ SPEC.path(
                             "type": "string",
                             "example": "tag",
                         },
+                    },
+                },
+                {
+                    "name": "category",
+                    "in": "query",
+                    "description": "Category",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
                     },
                 },
                 {
@@ -930,3 +1015,199 @@ SPEC.path(
         },
     },
 )
+
+SPEC.path(
+    path="/models/thread-categories/records/",
+    operations={
+        "get": {
+            "tags": ["Thread Categories"],
+            "summary": "List thread categories.",
+            "description": "List thread categories.",
+            "parameters": [
+                {
+                    "name": "limit",
+                    "in": "query",
+                    "description": "Limit",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 10,
+                    },
+                },
+                {
+                    "name": "offset",
+                    "in": "query",
+                    "description": "Offset",
+                    "required": False,
+                    "schema": {
+                        "type": "integer",
+                        "example": 0,
+                    },
+                },
+                {
+                    "name": "search",
+                    "in": "query",
+                    "description": "Search",
+                    "required": False,
+                    "schema": {
+                        "type": "string",
+                        "example": "thread category",
+                    },
+                },
+            ],
+            "responses": {
+                "200": {
+                    "description": "List thread categories.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "count": {
+                                        "type": "integer",
+                                        "example": 1,
+                                    },
+                                    "results": {
+                                        "type": "array",
+                                        "items": "ThreadCategoryResponse",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "post": {
+            "tags": ["Thread Categories"],
+            "summary": "Create thread category.",
+            "description": "Create thread category.",
+            "security": [{"jwt": []}],
+            "requestBody": {
+                "description": "Thread category create form.",
+                "content": {
+                    "application/json": {
+                        "schema": "ThreadCategoryForm",
+                    },
+                    "application/x-www-form-urlencoded": {
+                        "schema": "ThreadCategoryForm",
+                    },
+                    "multipart/form-data": {
+                        "schema": "ThreadCategoryForm",
+                    },
+                },
+            },
+            "responses": {
+                "201": {
+                    "description": "Thread category created.",
+                    "content": {
+                        "application/json": {
+                            "schema": "ThreadCategoryResponse",
+                        },
+                    },
+                },
+            },
+        },
+    }
+)
+
+SPEC.path(
+    path="/models/thread-categories/records/{pk}/",
+    operations={
+        "get": {
+            "tags": ["Thread Categories"],
+            "summary": "Retrieve thread category.",
+            "description": "Retrieve thread category.",
+            "parameters": [
+                {
+                    "name": "pk",
+                    "in": "path",
+                    "description": "Thread category primary key.",
+                    "required": True,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+            ],
+            "responses": {
+                "200": {
+                    "description": "Thread category retrieved.",
+                    "content": {
+                        "application/json": {
+                            "schema": "ThreadCategoryResponse",
+                        },
+                    },
+                },
+            },
+        },
+        "patch": {
+            "tags": ["Thread Categories"],
+            "summary": "Update thread category.",
+            "description": "Update thread category.",
+            "security": [{"jwt": []}],
+            "parameters": [
+                {
+                    "name": "pk",
+                    "in": "path",
+                    "description": "Thread category primary key.",
+                    "required": True,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+            ],
+            "requestBody": {
+                "description": "Thread category update form.",
+                "content": {
+                    "application/json": {
+                        "schema": "ThreadCategoryForm",
+                    },
+                    "application/x-www-form-urlencoded": {
+                        "schema": "ThreadCategoryForm",
+                    },
+                    "multipart/form-data": {
+                        "schema": "ThreadCategoryForm",
+                    },
+                },
+            },
+            "responses": {
+                "200": {
+                    "description": "Thread category updated.",
+                    "content": {
+                        "application/json": {
+                            "schema": "ThreadCategoryResponse",
+                        },
+                    },
+                },
+            },
+        },
+        "delete": {
+            "tags": ["Thread Categories"],
+            "summary": "Delete thread category.",
+            "description": "Delete thread category.",
+            "security": [{"jwt": []}],
+            "parameters": [
+                {
+                    "name": "pk",
+                    "in": "path",
+                    "description": "Thread category primary key.",
+                    "required": True,
+                    "schema": {
+                        "type": "integer",
+                        "example": 1,
+                    },
+                },
+            ],
+            "responses": {
+                "204": {
+                    "description": "Thread category deleted.",
+                },
+            },
+        },
+    },
+)
+
+
+

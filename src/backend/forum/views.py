@@ -1,6 +1,6 @@
 from typing import Any, Iterable, Optional, Tuple
 
-from account.services import authentication_layer, is_authenticated_layer
+from account.services import authentication_layer, is_authenticated_layer, is_staff_layer
 from django.db import models
 from django.http.request import QueryDict
 from django.views.decorators.http import require_http_methods
@@ -31,9 +31,9 @@ from djview.views import (
     into_service,
     method_layer,
 )
-from forum.filters import TaggedThreadFilterSet, ThreadFilterSet, ThreadVoteFilterSet
-from forum.forms import TaggedThreadForm, ThreadForm, ThreadStaffForm, ThreadVoteForm
-from forum.models import TaggedThread, Thread, ThreadVote
+from forum.filters import TaggedThreadFilterSet, ThreadCategoryFilterSet, ThreadFilterSet, ThreadVoteFilterSet
+from forum.forms import TaggedThreadForm, ThreadCategoryForm, ThreadForm, ThreadStaffForm, ThreadVoteForm
+from forum.models import TaggedThread, Thread, ThreadCategory, ThreadVote
 
 USER_CONTEXT_KEY = "__user__"
 
@@ -109,6 +109,14 @@ def tagged_thread_only_user_filterer(
     return TaggedThread.objects.filter(
         models.Q(thread__creator_id=ctx[USER_CONTEXT_KEY].pk)
     )
+
+
+def thread_category_django_filterer(
+    ctx: Context, queryset: Optional[Iterable[Any]]
+) -> Iterable[Any]:
+    return ThreadCategoryFilterSet(
+        ctx.request.GET, queryset=queryset, request=ctx.request
+    ).qs
 
 
 def thread_parser(ctx: Context) -> Optional[Tuple[dict, dict]]:
@@ -481,6 +489,7 @@ tagged_thread_list_create_view = context_view()(
     ),
 )
 
+
 tagged_thread_detail_delete_view = context_view()(
     into_service(
         exception_layer(),
@@ -533,3 +542,65 @@ tagged_thread_detail_delete_view = context_view()(
         ),
     ),
 )
+
+thread_category_list_create_view = context_view()(
+    into_service(
+        exception_layer(),
+        from_http_decorator(require_http_methods(["GET", "POST"])),
+        authentication_layer(),
+        method_layer(
+            "GET",
+            service=list_service(
+                model_list_serializer(),
+                model_all_filterer(ThreadCategory),
+                thread_category_django_filterer,
+                model_set_meta_count_filterer(),
+                limit_offset_filterer(),
+            ),
+        ),
+        is_authenticated_layer(),
+        is_staff_layer(),
+        service=create_service(
+            model_mutator(ThreadCategoryForm),
+            model_serializer(),
+        ),
+    ),
+)
+
+
+thread_category_detail_update_delete_view = context_view()(
+    into_service(
+        exception_layer(),
+        from_http_decorator(require_http_methods(["GET", "PUT", "DELETE"])),
+        authentication_layer(),
+        method_layer(
+            "GET",
+            service=detail_service(
+                model_serializer(),
+                model_all_filterer(ThreadCategory),
+                thread_category_django_filterer,
+                model_pk_filterer(),
+            ),
+        ),
+        is_authenticated_layer(),
+        is_staff_layer(),
+        method_layer(
+            "PUT",
+            service=update_service(
+                model_mutator(ThreadCategoryForm),
+                model_serializer(),
+                model_all_filterer(ThreadCategory),
+                thread_category_django_filterer,
+                model_pk_filterer(),
+            ),
+        ),
+        service=delete_service(
+            model_delete_mutator,
+            model_all_filterer(ThreadCategory),
+            thread_category_django_filterer,
+            model_pk_filterer(),
+        ),
+    )
+)
+
+

@@ -46,10 +46,24 @@ class ThreadQuerySet(models.QuerySet):
     def pending(self) -> "ThreadQuerySet":
         return self.filter(~self.live_q() & ~self.comment_q())
 
+    def category(self, category_id: int) -> "ThreadQuerySet":
+        return self.filter(
+            (self.question_q() & models.Q(category_id=category_id))
+            | (self.answer_q() & models.Q(parent__category_id=category_id))
+            | models.Q(parent__parent__category_id=category_id)
+        )
+
+
+class ThreadCategory(models.Model):
+    name = models.CharField(max_length=300, unique=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated = models.DateTimeField(auto_now=True, db_index=True)
+
 
 class Thread(models.Model):
     title = models.CharField(max_length=255, default="", db_index=True)
     content = models.TextField(db_index=True)
+    category = models.ForeignKey(ThreadCategory, on_delete=models.CASCADE, null=True, blank=True, related_name="threads")
 
     creator_id = models.PositiveIntegerField(db_index=True)
     creator_name = models.CharField(max_length=300, default="", blank=True)
@@ -122,6 +136,8 @@ class TaggedThread(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name="tags")
     tag_id = models.PositiveIntegerField(db_index=True)
     tag_name = models.CharField(max_length=100)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated = models.DateTimeField(auto_now=True, db_index=True)
 
     objects = TaggedThreadQuerySet.as_manager()
 

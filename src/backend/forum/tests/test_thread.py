@@ -2,7 +2,7 @@ from account.test import LiveServerAuthenticatedTestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
-from forum.models import TaggedThread, Thread, ThreadVote
+from forum.models import TaggedThread, Thread, ThreadCategory, ThreadVote
 from taggit.models import Tag
 
 User = get_user_model()
@@ -11,6 +11,9 @@ User = get_user_model()
 class TestThreadAPI(LiveServerAuthenticatedTestCase):
     def setUp(self) -> None:
         super().setUp()
+        
+        self.category = ThreadCategory.objects.create(name="testcategory")
+        self.category2 = ThreadCategory.objects.create(name="testcategory2")
 
         self.tag1 = Tag.objects.create(name="tag1")
         self.tag2 = Tag.objects.create(name="tag2")
@@ -21,6 +24,7 @@ class TestThreadAPI(LiveServerAuthenticatedTestCase):
             creator_id=self.user.id,
             creator_name=self.user.get_full_name(),
             creator_email=self.user.email,
+            category=self.category,
         )
         TaggedThread.objects.create(
             thread=self.question,
@@ -54,6 +58,7 @@ class TestThreadAPI(LiveServerAuthenticatedTestCase):
             approver_id=self.staff.id,
             approver_name=self.staff.get_full_name(),
             approver_email=self.staff.email,
+            category=self.category2,
         )
         TaggedThread.objects.create(
             thread=self.approved_question,
@@ -149,6 +154,17 @@ class TestThreadAPI(LiveServerAuthenticatedTestCase):
                 "title": "testthread",
                 "content": "test",
                 "parent": self.approved_question.pk,
+                "category": self.category.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+
+        response = self.user_client.post(
+            url,
+            {
+                "title": "testthread",
+                "content": "test",
+                "parent": self.approved_question.pk,
             },
         )
         self.assertEqual(response.status_code, 201)
@@ -160,6 +176,25 @@ class TestThreadAPI(LiveServerAuthenticatedTestCase):
         self.assertEqual(response.json()["fields"]["approved"], False)
         self.assertEqual(response.json()["fields"]["approver_name"], "")
         self.assertEqual(response.json()["fields"]["approver_email"], "")
+
+        response = self.user_client.post(
+            url,
+            {
+                "title": "testthread2",
+                "content": "test",
+                "category": self.category2.pk,
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["fields"]["title"], "testthread2")
+        self.assertEqual(response.json()["fields"]["content"], "test")
+        self.assertEqual(response.json()["fields"]["parent"], None)
+        self.assertEqual(response.json()["fields"]["creator_id"], self.user.pk)
+        self.assertEqual(response.json()["fields"]["approver_id"], 0)
+        self.assertEqual(response.json()["fields"]["approved"], False)
+        self.assertEqual(response.json()["fields"]["approver_name"], "")
+        self.assertEqual(response.json()["fields"]["approver_email"], "")
+        self.assertEqual(response.json()["fields"]["category"], self.category2.pk)
 
         response = self.staff_client.post(
             url,
@@ -366,3 +401,11 @@ class TestThreadAPI(LiveServerAuthenticatedTestCase):
         self.assertEqual(len(response.json()["results"]), 6)
         self.assertEqual(response.json()["count"], 6)
         self.assertEqual(response.json()["results"][0]["pk"], self.question.pk)
+
+    def test_filter_category(self):
+        url = reverse("thread-list-create")
+
+        response = self.staff_client.get(url, {"category": self.category.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["results"]), 3)
+        self.assertEqual(response.json()["count"], 3)
