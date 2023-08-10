@@ -1,0 +1,92 @@
+{% include 'header.html' %}
+<head>
+    <title>Update Student Information</title>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="panel-body">
+        <form action="{{ url_for('update_student', student_id=student.id) }}" method="POST">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="birthday">Birthday:</label>
+                <input type="date" class="form-control" id="birthday" name="birthday" value="{{ student.birthday }}"
+                       required>
+            </div>
+            <div class="form-group">
+                <label for="activity_class">Activity Class:</label>
+                <select class="form-control" id="activity_class" name="activity_class" required>
+                    {% for class in classes %}
+                    <option value="{{ class.name }}" {% if class.name== student.activity_class %}selected{% endif %}>{{
+                        class.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <select class="form-control" id="department" name="department_name" required>
+                    {% for department in departments %}
+                    <option value="{{ department.name }}" {% if department.name== student.department_name %}selected{%
+                            endif %}>{{ department.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="major">Major:</label>
+                <select class="form-control" id="major" name="major_name" required>
+                    {% for department in departments %}
+                    {% for major in department.majors %}
+                    <option value="{{ student.major }}" {% if major== student.major_name %}selected{% endif %}>{{ student.major }}
+                    </option>
+                    {% endfor %}
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- <div class="form-group">
+                <label for="GPA">GPA:</label>
+                <input type="number" step="0.01" class="form-control" id="GPA" name="GPA" value="{{ student.GPA }}"
+                       required>
+            </div> -->
+            <button type="submit" class="btn btn-primary">Update Student</button>
+        </form>
+    </div>
+</div>
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function loadMajors()
+    {
+        var selectedDepartment = $("#department").val();
+        const curMajor = "{{ student.major_name }}";
+        console.log(selectedDepartment)
+        console.log(curMajor);
+        $.ajax({
+          url: `/majors/${selectedDepartment}`,
+          type: "GET",
+          contentType: "application/json",
+          success: function (data) {
+            var majorDropdown = $("#major");
+            console.log(data.majors);
+            majorDropdown.empty();
+            $.each(data.majors, function (index, major) {
+              const selected = major == curMajor;
+              majorDropdown.append(new Option(major, major, curMajor));
+            });
+          },
+          error: function (error) {
+            console.error("Error fetching majors: ", error);
+          },
+        })
+    }
+    // When the department dropdown changes, fetch majors for the selected department using Ajax
+    $(document).ready(function () {
+      $("#department").change(loadMajors);
+      loadMajors();
+    });
+</script>
+</body>
+{% include 'footage.html' %}
