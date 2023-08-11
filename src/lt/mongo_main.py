@@ -23,6 +23,15 @@ sample_classes = [
 ]
 sample_students = [
     {
+        "id": 1,
+        "name": "Linh Ho",
+        "birthday": "2001-05-15",
+        "activity_class": "Class B",
+        "department_name": "Department of Computer Science",
+        "major_name": "Computer Science",
+        "GPA": 3.5
+    },
+    {
         "id": 2,
         "name": "John",
         "birthday": "1999-05-15",
@@ -157,6 +166,7 @@ def fetch_students():
     total_pages = (total_students // per_page) + 1 if total_students % per_page > 0 else total_students // per_page
     for student in students:
         del student['_id']
+    print(students)
     return jsonify({'students': students, 'total_pages': total_pages})
 
 
@@ -217,9 +227,9 @@ def add_student():
         department_name = request.form['department']
         major_name = request.form['major']
         GPA = float(request.form.get('GPA', 0))
-        max_students = str(students_collection.count_documents({}))
+        max_students = students_collection.count_documents({})
         new_student = {
-            "id": f'1912{max_students.rjust(4, "0")}',
+            "id": max_students + 1,
             "name": name,
             "birthday": birthday,
             "activity_class": activity_class,

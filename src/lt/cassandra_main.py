@@ -39,22 +39,23 @@ def fetch_students():
         where = f"WHERE {wheres[0]}"
     elif len(wheres) > 1:
         where = f"WHERE {' AND '.join(wheres)}"
-    query = f'SELECT * FROM {table} {where} LIMIT {per_page}'
+    query = f'SELECT * FROM {table} {where} LIMIT {per_page * page}'
     print(Fore.GREEN + query)
     session.row_factory = tuple_factory
     result = session.execute(f'SELECT COUNT(id) AS COUNT FROM {table} {where}')
     total_students = result.one()[0]
-    # print("count", total_students)
+    print("count", total_students)
+    print("skip", skip)
     session.row_factory = dict_factory
     students = []
     if total_students > skip:
         students = list(session.execute(query))[skip:]
-    # print("students", students)
     for student in students:
         birthdate = student['birthday'].date()
         formatted_birthdate = birthdate.strftime("%Y-%m-%d")
         student['birthday'] = formatted_birthdate
         student['GPA'] = student['gpa']
+    print("students", students)
     total_pages = (total_students // per_page) + 1 if total_students % per_page > 0 else total_students // per_page
     return jsonify({'students': students, 'total_pages': total_pages})
 

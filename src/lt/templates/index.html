@@ -23,6 +23,11 @@
       // Fetch students on initial page load
       fetchStudents(1, "");
     });
+    function fetchPage(page)
+    {
+        const searchTerm = $("#searchInput").val();
+        fetchStudents(page, searchTerm);
+    }
     function reloadAfterDeleting()
     {
         fetchStudents(1, "");

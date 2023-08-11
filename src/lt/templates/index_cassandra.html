@@ -57,6 +57,10 @@
             "last": $("#lastRowId").val(),
         };
     }
+    function fetchPage(page)
+    {
+        fetchStudents(page, getSearchInputs());
+    }
     function reloadAfterDeleting()
     {
         fetchStudents(1, getSearchInputs());

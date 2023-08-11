@@ -35,6 +35,7 @@
 <script>
     // Function to fetch and display students using Ajax
     function fetchStudents(page, searchTerm) {
+      console.log(searchTerm);
       $.ajax({
         url: "/fetch_students",
         type: "POST",
@@ -59,6 +60,7 @@
       tableBody.empty();
 
       students.forEach((student) => {
+
         const row = $("<tr>");
         row.append(`<td>${student.id}</td>`);
         row.append(`<td>${student.name}</td>`);
@@ -107,7 +109,7 @@
 
       for (let i = 1; i <= totalPages; i++) {
         const linkClass = i === currentPage ? "btn btn-primary active" : "btn btn-primary";
-        const link = $(`<a class="${linkClass}" href="#" onclick="fetchStudents(${i}, '${searchTerm}')">${i}</a>`);
+        const link = $(`<a class="${linkClass}" href="#" onclick="fetchPage(${i})">${i}</a>`);
         paginationDiv.append(link);
       }
     }
