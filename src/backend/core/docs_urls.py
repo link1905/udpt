@@ -3,16 +3,13 @@ from django.http.response import HttpResponse, JsonResponse
 from django.template import Template
 from django.template.context import make_context
 from django.urls import path
-from django.views.decorators.cache import cache_page
 
 from core.docs import SPEC
 
-@cache_page(31536000)
 def docs_json(*_) -> JsonResponse:
     return JsonResponse(SPEC.to_dict())
 
 
-@cache_page(31536000)
 def docs(_: HttpRequest) -> HttpResponse:
     context = make_context(
         {
