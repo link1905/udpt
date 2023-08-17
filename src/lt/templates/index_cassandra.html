@@ -1,0 +1,83 @@
+{% include 'header.html' %}
+
+<body>
+    <div class="container">
+        <form id="searchForm" class="form-inline mb-4">
+            <div class="form-inline">
+
+                <label for="searchFilterName">Search type:</label>
+                <select id="searchFilterName" class="form-control">
+                    <option value="all" selected>All</option>
+                    <option value="activity_class">Class</option>
+                    <option value="department_name">Deparment</option>
+                </select>
+                <div class="form-group" id="searchFilterGroup">
+                    <label for="searchFilterValue">Search value:</label>
+                    <select id="searchFilterValue" class="form-control">
+                    </select>
+                </div>
+                <input type="hidden" id="lastRowId">
+
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+    </div>
+    {% include 'student_paging.html' %}
+</body>
+<script>
+    function loadFilterValue() {
+        filter_name = $("#searchFilterName").val()
+        if (filter_name === "all") {
+            $("#searchFilterGroup").hide();
+            return;
+        }
+        $("#searchFilterGroup").show();
+        $.ajax({
+            url: `/${filter_name}`,
+            type: "GET",
+            contentType: "application/json",
+            success: function (data) {
+                data.sort();
+                var dropdown = $("#searchFilterValue");
+                console.log(data.majors);
+                dropdown.empty();
+                $.each(data, (i, v) => {
+                    dropdown.append(new Option(v, v));
+                });
+            },
+            error: function (error) {
+                console.error("Error fetching filter data: ", error);
+            },
+        });
+    }
+    function getSearchInputs() {
+        return {
+            "filter": $("#searchFilterName").val(),
+            "value": $("#searchFilterValue").val(),
+            "last": $("#lastRowId").val(),
+        };
+    }
+    function fetchPage(page)
+    {
+        fetchStudents(page, getSearchInputs());
+    }
+    function reloadAfterDeleting()
+    {
+        fetchStudents(1, getSearchInputs());
+    }
+    // Function to handle form submission using Ajax
+    $(document).ready(function () {
+
+        $("#searchFilterName").change(loadFilterValue)
+        $("#searchForm").submit(function (event) {
+            event.preventDefault();
+            fetchStudents(1, getSearchInputs());
+        });
+        $("#searchFilterGroup").hide();
+        loadFilterValue();
+        // Fetch students on initial page load
+        fetchStudents(1, getSearchInputs());
+    });
+
+</script>
+{% include 'footage.html' %}

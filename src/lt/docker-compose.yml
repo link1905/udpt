@@ -1,0 +1,27 @@
+services:
+  mongo-db:
+    image: mongo:7.0.0-rc8-jammy
+    container_name: lt-mongo-db
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo:/Data/db/mongo
+    networks:
+      - mongo-db
+  cassandra:
+    image: cassandra:4.1.3
+    container_name: lt-cassandra-db
+    ports:
+      - '9042:9042'
+    volumes:
+      - cassandra:/Data/db/cassandra
+    networks:
+      - cassandra-db
+volumes:
+  mongo:
+  cassandra:
+networks:
+  cassandra-db:
+    driver: bridge
+  mongo-db:
+    driver: bridge

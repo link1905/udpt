@@ -1,0 +1,37 @@
+{% include 'header.html' %}
+<head>
+    <title>Student List</title>
+</head>
+<body>
+<!-- Search form -->
+
+<div class="container">
+    <form id="searchForm" class="form-inline mb-4">
+        <input type="text" class="form-control mr-2" id="searchInput" placeholder="Search by Name">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+{% include 'student_paging.html' %}
+<script>
+    // Function to handle form submission using Ajax
+    $(document).ready(function () {
+      $("#searchForm").submit(function (event) {
+        event.preventDefault();
+        const searchTerm = $("#searchInput").val();
+        fetchStudents(1, searchTerm);
+      });
+      // Fetch students on initial page load
+      fetchStudents(1, "");
+    });
+    function fetchPage(page)
+    {
+        const searchTerm = $("#searchInput").val();
+        fetchStudents(page, searchTerm);
+    }
+    function reloadAfterDeleting()
+    {
+        fetchStudents(1, "");
+    }
+</script>
+</body>
+{% include 'footage.html' %}

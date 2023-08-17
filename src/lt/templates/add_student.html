@@ -1,0 +1,78 @@
+{% include 'header.html' %}
+<head>
+    <title>Add new student</title>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="panel-body">
+        <form action="{{ url_for('add_student') }}" method="POST">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="birthday">Birthday:</label>
+                <input type="date" class="form-control" id="birthday" name="birthday" required>
+            </div>
+            <div class="form-group">
+                <label for="activity_class">Activity Class:</label>
+                <select class="form-control" id="activity_class" name="activity_class" required>
+                    {% for class in classes %}
+                    <option value="{{ class.name }}">{{ class.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <select class="form-control" id="department" name="department" required>
+                    {% for department in departments %}
+                    <option value="{{ department.name }}">{{ department.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="major">Major:</label>
+                <select class="form-control" id="major" name="major" required>
+                </select>
+            </div>
+            <!-- <div class="form-group">
+                <label for="GPA">GPA:</label>
+                <input type="number" min="0" max="10" step="0.1" class="form-control" id="GPA" name="GPA" required>
+            </div> -->
+            <button type="submit" class="btn btn-primary">Add Student</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function loadMajors()
+    {
+        var selectedDepartment = $("#department").val();
+        $.ajax({
+          url: `/majors/${selectedDepartment}`,
+          type: "GET",
+          contentType: "application/json",
+          success: function (data) {
+            var majorDropdown = $("#major");
+            console.log(data.majors);
+            majorDropdown.empty();
+            $.each(data.majors, function (index, major) {
+              majorDropdown.append(new Option(major, major));
+            });
+          },
+          error: function (error) {
+            console.error("Error fetching majors: ", error);
+          },
+        })
+    }
+    // When the department dropdown changes, fetch majors for the selected department using Ajax
+    $(document).ready(function () {
+      $("#department").change(loadMajors);
+      loadMajors();
+    });
+
+</script>
+</body>
+
+{% include 'footage.html' %}

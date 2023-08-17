@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <!-- Add Pagination CSS -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-paginator/2.1.3/css/bootstrap-paginator.min.css">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{{ url_for('show_students') }}">Student Management Application</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><a href="{{ url_for('show_students') }}">Student list</a></li>
+            <li><a href="{{ url_for('add_student') }}">Add student</a></li>
+        </ul>
+    </div>
+    <hr>
+</head>
