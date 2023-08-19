@@ -3,20 +3,70 @@ import {
   Button,
   Input,
   List,
+  LoadingOverlay,
   Paper,
-  Select,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { DetailEditor } from "../../components/create-question-form/detail-editor";
-import { UploadImage } from "../../components/create-question-form/upload-image";
 import { TagsInput } from "../../components/create-question-form/tags-input";
-import { NavLink } from "react-router-dom";
+import { useForm } from "@mantine/form";
+import { CategoryInput } from "../../components/create-question-form/category-input";
+import { useMutation } from "@tanstack/react-query";
+import { requestCreateThread } from "../../services/forum/create-thread.ts";
+import { CreateThreadForm } from "../../services/forum/forum.client.ts";
+import { useNavigate } from "react-router-dom";
+import { requestCreateTaggedThread } from "../../services/forum/create-tagged-thread.ts";
+
+export interface CreateQuestionData extends CreateThreadForm {
+  title: string;
+  content: string;
+  tags: number[];
+  category: number;
+}
 
 export function CreateQuestionPage() {
+  const navigate = useNavigate();
+
+  const { mutate, isLoading } = useMutation(
+    async ({ tags, ...data }: CreateQuestionData) => {
+      const thread = await requestCreateThread(data);
+      for (const tag of tags) {
+        await requestCreateTaggedThread({
+          tag_id: tag,
+          thread: thread.pk,
+        });
+      }
+      return thread;
+    },
+    {
+      onSuccess(data) {
+        navigate(`/question/${data.pk}`);
+      },
+    },
+  );
+  const form = useForm<CreateQuestionData>({
+    initialValues: {
+      title: "",
+      content: "------",
+      tags: [],
+      category: 0,
+    },
+    validate: {
+      title: (value) => (!value ? "Title is required " : null),
+      category: (value) => (!value ? "Category is required " : null),
+      content: (value) => (!value ? "Content is required " : null),
+    },
+  });
+
   return (
-    <Box pb={100}>
+    <Box
+      pb={100}
+      component="form"
+      onSubmit={form.onSubmit((values) => mutate(values))}
+    >
+      <LoadingOverlay visible={isLoading} />
       <Title mb="xl">Ask a question</Title>
       <Stack spacing="lg">
         <Paper withBorder p="xl">
@@ -55,7 +105,10 @@ export function CreateQuestionPage() {
             label="Title"
             description="Be specific and imagine you’re asking a question to another person."
           >
-            <Input placeholder="e.g. Is there an R function for finding the index of an element in a vector?" />
+            <Input
+              {...form.getInputProps("title")}
+              placeholder="e.g. Is there an R function for finding the index of an element in a vector?"
+            />
           </Input.Wrapper>
         </Paper>
         <Paper withBorder p="xl">
@@ -66,19 +119,7 @@ export function CreateQuestionPage() {
             description="Introduce the problem and expand on what you put in the title. Minimum 20 characters."
           >
             <Box mt="sm">
-              <DetailEditor />
-            </Box>
-          </Input.Wrapper>
-        </Paper>
-        <Paper withBorder p="xl">
-          <Input.Wrapper
-            mb="md"
-            withAsterisk
-            label="Attach some demo images"
-            description="Attach some demo images"
-          >
-            <Box mt="sm">
-              <UploadImage />
+              <DetailEditor {...form.getInputProps("content")} />
             </Box>
           </Input.Wrapper>
         </Paper>
@@ -90,7 +131,7 @@ export function CreateQuestionPage() {
             description="Add up to 5 tags to describe what your question is about. Start typing to see suggestions."
           >
             <Box mt="sm">
-              <TagsInput />
+              <TagsInput {...form.getInputProps("tags")} />
             </Box>
           </Input.Wrapper>
         </Paper>
@@ -102,22 +143,12 @@ export function CreateQuestionPage() {
             description="Select a category"
           >
             <Box mt="sm">
-              <Select
-                placeholder="Pick one"
-                data={[
-                  { value: "react", label: "React" },
-                  { value: "ng", label: "Angular" },
-                  { value: "svelte", label: "Svelte" },
-                  { value: "vue", label: "Vue" },
-                ]}
-              />
+              <CategoryInput {...form.getInputProps("category")} />
             </Box>
           </Input.Wrapper>
         </Paper>
         <Box>
-          <NavLink to={"/question/id"}>
-            <Button>Submit question</Button>
-          </NavLink>
+          <Button type="submit">Submit question</Button>
         </Box>
       </Stack>
     </Box>

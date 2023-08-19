@@ -7,15 +7,19 @@ import {
   Button,
   Divider,
   Group,
-  Image,
+  LoadingOverlay,
   Paper,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { IconThumbUp, IconThumbDown } from "@tabler/icons-react";
-import demoImage from "../../assets/demo-image.png";
 import demoAvatarImage from "../../assets/avata.jpeg";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getThreadQueryKey,
+  requestGetThread,
+} from "../../services/forum/get-thread.ts";
 
 const tags = [
   "Tag azaaa",
@@ -30,12 +34,20 @@ const items = [1, 2];
 
 export function ViewQuestionPage() {
   const { id } = useParams<"id">();
-  console.log(id);
+  const { data, isLoading } = useQuery(
+    getThreadQueryKey(id || ""),
+    () => requestGetThread(id || ""),
+    {
+      enabled: !!id,
+    },
+  );
+  console.log(data);
   return (
     <Box>
+      <LoadingOverlay visible={isLoading} />
       <Group position="apart">
         <Box>
-          <Title fw={400}>Question title here</Title>
+          <Title fw={400}>{data?.fields?.title}</Title>
           <Text fz="xs">Asked 4 years, 5 months ago</Text>
         </Box>
         <Box>
@@ -69,34 +81,17 @@ export function ViewQuestionPage() {
               <Stack align="start">
                 <Group>
                   <Avatar src={demoAvatarImage} color="blue" radius="sm" />
-                  Ben Larson
+                  {data?.fields?.creator_name || data?.fields?.creator_email}
                 </Group>
                 <Box>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                  irure dolor in reprehenderit in voluptate velit esse cillum
-                  dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                  cupidatat non proident, sunt in culpa qui officia deserunt
-                  mollit anim id est laborum.
+                  {data?.fields?.content && (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: data.fields.content,
+                      }}
+                    />
+                  )}
                 </Box>
-                <Group>
-                  <Image
-                    maw={240}
-                    mx="auto"
-                    radius="md"
-                    src={demoImage}
-                    alt="Random image"
-                  />
-                  <Image
-                    maw={240}
-                    mx="auto"
-                    radius="md"
-                    src={demoImage}
-                    alt="Random image"
-                  />
-                </Group>
                 <Group spacing="sm">
                   {tags.map((tag) => (
                     <Badge key={tag}>{tag}</Badge>

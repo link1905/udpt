@@ -9,8 +9,10 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
+  const navigate = useNavigate();
   const [opened, { toggle }] = useDisclosure(false);
 
   return (
@@ -38,7 +40,11 @@ export function Header() {
             />
           </Group>
           <Box>
-            <Avatar color="cyan" radius="xl">
+            <Avatar
+              color="cyan"
+              radius="xl"
+              onClick={() => navigate("/account")}
+            >
               MK
             </Avatar>
           </Box>
