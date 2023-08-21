@@ -8,11 +8,13 @@ export interface CategoryFields {
 }
 
 export interface ThreadFields {
+  pk: number;
   title: string;
   content: string;
   creator_email: string;
   creator_name: string;
   created: string;
+  path: string;
 }
 
 export interface CreateThreadForm {

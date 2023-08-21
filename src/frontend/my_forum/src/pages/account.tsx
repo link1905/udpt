@@ -7,6 +7,7 @@ import {
   Box,
   LoadingOverlay,
   Avatar,
+  PasswordInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,19 +15,43 @@ import {
   authRequestQueryKey,
   requestAuthRefresh,
 } from "../services/account/auth-refresh.ts";
+import { useState, useEffect } from "react";
 import { requestUpdateAccount } from "../services/account/update-account.ts";
 import { useRef } from "react";
-
+import { requestChangePassword } from "../services/account/change-password.ts";
+import CustomAlert from "../components/custom_alert/CustomAlert.tsx";
 export interface AccountFormData {
   username: string;
   email: string;
   first_name: string;
   last_name: string;
-  password1: string;
-  password2: string;
+  oldPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
 }
 
 export function AccountPage() {
+  const [showAlertSuccess, setShowAlertSuccess] = useState<boolean>(false);
+  const [updateSuccess, setUpdateSuccess] = useState<{
+    first_name: boolean;
+    last_name: boolean;
+    email: boolean;
+    newPassword: boolean;
+  }>({
+    first_name: false,
+    last_name: false,
+    email: false,
+    newPassword: false,
+  });
+  const [updateError, setUpdateError] = useState<{
+    email: boolean;
+    oldPassword:boolean;
+    newPassword: boolean;
+  }>({
+    email: false,
+    oldPassword:false,
+    newPassword: false,
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { mutate, isLoading: isUpdating } = useMutation(requestUpdateAccount, {
@@ -39,7 +64,7 @@ export function AccountPage() {
     requestAuthRefresh,
     {
       retry: 0,
-    },
+    }
   );
   const form = useForm<AccountFormData>({
     initialValues: {
@@ -47,8 +72,9 @@ export function AccountPage() {
       email: data?.fields?.email ?? "",
       first_name: data?.fields?.first_name ?? "",
       last_name: data?.fields?.last_name ?? "",
-      password1: "",
-      password2: "",
+      oldPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
     },
     validate: {
       username: (value) => !value,
@@ -58,11 +84,39 @@ export function AccountPage() {
     },
   });
 
-  function handleSubmit(values: AccountFormData) {
-    mutate({
+  async function handleSubmit(values: AccountFormData) {
+    if (values.newPassword !== values.confirmNewPassword) {
+      return;
+    }
+
+    await mutate({
       id: data?.pk ?? 0,
       ...values,
     });
+
+    requestChangePassword({
+      oldPassword: values.oldPassword,
+      newPassword: values.newPassword,
+      confirmNewPassword: values.confirmNewPassword,
+    });
+
+    if (values.first_name !== data?.fields?.first_name) {
+      setUpdateSuccess((prev) => ({ ...prev, first_name: true }));
+    }
+    if (values.last_name !== data?.fields?.last_name) {
+      setUpdateSuccess((prev) => ({ ...prev, last_name: true }));
+    }
+    if (values.email !== data?.fields?.email) {
+      setUpdateSuccess((prev) => ({ ...prev, email: true }));
+    }
+    if (values.newPassword !== "") {
+      setUpdateSuccess((prev) => ({ ...prev, newPassword: true }));
+    }
+
+    setShowAlertSuccess(true);
+    setTimeout(() => {
+      setShowAlertSuccess(false);
+    }, 3000);
   }
 
   return (
@@ -121,17 +175,63 @@ export function AccountPage() {
                 {...form.getInputProps("email")}
               />
               <TextInput
-                placeholder="Password"
-                label="Password"
-                {...form.getInputProps("password1")}
+                type="password"
+                placeholder="Old Password"
+                label="Old Password"
+                withAsterisk
+                {...form.getInputProps("oldPassword")}
               />
-              <TextInput
-                placeholder="Confirm password"
-                label="Confirm password"
-                {...form.getInputProps("password2")}
+              <PasswordInput
+                placeholder="New Password"
+                label="New Password"
+                withAsterisk
+                {...form.getInputProps("newPassword")}
               />
+              <PasswordInput
+                placeholder="Confirm New Password"
+                label="Confirm New Password"
+                withAsterisk
+                {...form.getInputProps("confirmNewPassword")}
+              />
+              {showAlertSuccess && (
+                <div className="fixed top-12 right-0 p-4 z-[9999] ">
+                  {updateSuccess.first_name && (
+                    <CustomAlert
+                      color="green"
+                      title="Success"
+                      message="Update first name successfully!"
+                    />
+                  )}
+
+                  {updateSuccess.last_name && (
+                    <CustomAlert
+                      color="green"
+                      title="Success"
+                      message="Update last name successfully!"
+                    />
+                  )}
+                  {updateSuccess.email && (
+                    <CustomAlert
+                      color="green"
+                      title="Success"
+                      message="Update email successfully!"
+                    />
+                  )}
+                  {updateSuccess.newPassword && (
+                    <CustomAlert
+                      color="green"
+                      title="Success"
+                      message="Update password successfully!"
+                    />
+                  )}
+                </div>
+              )}
               <Group>
-                <Button loading={isUpdating} type="submit">
+                <Button
+                  className="bg-blue-500 text-white border-blue-500"
+                  loading={isUpdating}
+                  type="submit"
+                >
                   Submit
                 </Button>
               </Group>

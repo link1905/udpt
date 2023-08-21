@@ -30,7 +30,7 @@ const tags = [
   "Tag fzaaa",
 ];
 
-const items = [1, 2];
+const items = [1];
 
 export function ViewQuestionPage() {
   const { id } = useParams<"id">();
