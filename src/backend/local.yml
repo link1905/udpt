@@ -11,6 +11,8 @@ services:
         env_file:
             - ./.envs/.local/.django
             - ./.envs/.local/.postgres
+        environment:
+            - USE_FORUM_READ_APP=False
         ports:
             - 8000:8000
         command: /start
@@ -18,6 +20,8 @@ services:
             udpt-postgres:
                 condition: service_healthy
             udpt-redis:
+                condition: service_healthy
+            udpt-rabbitmq:
                 condition: service_healthy
 
     udpt-redis:
@@ -42,5 +46,20 @@ services:
             timeout: 5s
             retries: 5
 
+    udpt-rabbitmq:
+        image: rabbitmq:3.8-management-alpine
+        environment:
+            - RABBITMQ_DEFAULT_USER=udptgroup1
+            - RABBITMQ_DEFAULT_PASS=udptgroup1
+        ports:
+            # AMQP protocol port
+            - '5672:5672'
+            # HTTP management UI
+            - '15672:15672'
+        healthcheck:
+            test: rabbitmq-diagnostics check_port_connectivity
+            interval: 1s
+            timeout: 3s
+            retries: 30
 volumes:
     udpt_db:

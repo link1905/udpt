@@ -14,3 +14,7 @@ apispec==6.3
 bjoern==3.2.2
 dataclasses-json==v0.5.14
 requests==2.31
+
+pika~=1.3.2
+marshmallow~=3.20.1
+djangorestframework~=3.14.0

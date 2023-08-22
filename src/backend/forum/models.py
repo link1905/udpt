@@ -1,4 +1,22 @@
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+
+from .producer import *
+
+
+def on_saved(instance, created, get_serializer, model_name):
+    serializer = get_serializer(instance)
+    print('saved', model_name, serializer.data)
+    publish(f'{model_name}_saved', serializer.data)
+    return instance
+
+
+def on_deleted(instance, get_serializer, model_name):
+    serializer = get_serializer(instance)
+    print('deleted', model_name, serializer.data)
+    publish(f'{model_name}_deleted', serializer.data)
 
 
 class ThreadQuerySet(models.QuerySet):
@@ -60,6 +78,20 @@ class ThreadCategory(models.Model):
     updated = models.DateTimeField(auto_now=True, db_index=True)
 
 
+@receiver(post_save, sender=ThreadCategory)
+def on_thread_category_created(sender, instance, created, **kwargs):
+    from .serializers import ThreadCategorySerializer
+    on_saved(instance, created, lambda x: ThreadCategorySerializer(x), "thread_category")
+    return instance
+
+
+@receiver(post_delete, sender=ThreadCategory)
+def on_thread_category_deleted(sender, instance, **kwargs):
+    from .serializers import ThreadCategorySerializer
+    on_deleted(instance, lambda x: ThreadCategorySerializer(x), "thread_category")
+    return instance
+
+
 class Thread(models.Model):
     title = models.CharField(max_length=255, default="", db_index=True)
     content = models.TextField(db_index=True)
@@ -94,6 +126,20 @@ class Thread(models.Model):
         ordering = ["-created"]
 
 
+@receiver(post_save, sender=Thread)
+def on_thread_created(sender, instance, created, **kwargs):
+    from .serializers import ThreadSerializer
+    on_saved(instance, created, lambda x: ThreadSerializer(x), "thread")
+    return instance
+
+
+@receiver(post_delete, sender=Thread)
+def on_thread_deleted(sender, instance, **kwargs):
+    from .serializers import ThreadSerializer
+    on_deleted(instance, lambda x: ThreadSerializer(x), "thread")
+    return instance
+
+
 class ThreadVoteQuerySet(models.QuerySet):
     def live_q(_) -> models.Exists:
         return models.Exists(
@@ -122,6 +168,20 @@ class ThreadVote(models.Model):
         unique_together = ("thread", "user_id")
 
 
+@receiver(post_save, sender=ThreadVote)
+def on_thread_vote_created(sender, instance, created, **kwargs):
+    from .serializers import ThreadVoteSerializer
+    on_saved(instance, created, lambda x: ThreadVoteSerializer(x), "thread_vote")
+    return instance
+
+
+@receiver(post_delete, sender=ThreadVote)
+def on_thread_vote_deleted(sender, instance, **kwargs):
+    from .serializers import ThreadVoteSerializer
+    on_deleted(instance, lambda x: ThreadVoteSerializer(x), "thread_vote")
+    return instance
+
+
 class TaggedThreadQuerySet(models.QuerySet):
     def live_q(_) -> models.Exists:
         return models.Exists(
@@ -143,3 +203,18 @@ class TaggedThread(models.Model):
 
     class Meta:
         unique_together = ("thread", "tag_id")
+
+
+
+@receiver(post_save, sender=TaggedThread)
+def on_thread_vote_created(sender, instance, created, **kwargs):
+    from .serializers import TaggedThreadSerializer
+    on_saved(instance, created, lambda x: TaggedThreadSerializer(x), "thread_tag")
+    return instance
+
+
+@receiver(post_delete, sender=TaggedThread)
+def on_thread_vote_deleted(sender, instance, **kwargs):
+    from .serializers import TaggedThreadSerializer
+    on_deleted(instance, lambda x: TaggedThreadSerializer(x), "thread_tag")
+    return instance

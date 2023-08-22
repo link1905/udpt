@@ -26,12 +26,14 @@ def get_bool_from_env(name, default_value):
 USE_ACCOUNT_APP = get_bool_from_env("USE_ACCOUNT_APP", True)
 USE_TAG_APP = get_bool_from_env("USE_TAG_APP", True)
 USE_FORUM_APP = get_bool_from_env("USE_FORUM_APP", True)
+USE_FORUM_READ_APP = get_bool_from_env("USE_FORUM_READ_APP", True)
 
 ACCOUNT_SERVICE_URL = os.environ.get(
     "ACCOUNT_SERVICE_URL", "http://localhost:8000/api/"
 )
 TAG_SERVICE_URL = os.environ.get("TAG_SERVICE_URL", "http://localhost:8000/api/")
 FORUM_SERVICE_URL = os.environ.get("FORUM_SERVICE_URL", "http://localhost:8000/api/")
+RABBIT_MQ_URL = os.environ.get("RABBIT_MQ_URL", "localhost")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -68,8 +70,14 @@ if USE_TAG_APP and not USE_ACCOUNT_APP:
 if USE_TAG_APP:
     INSTALLED_APPS += ["taggit"]
 
+if USE_FORUM_APP or USE_FORUM_READ_APP:
+    INSTALLED_APPS += ["rest_framework"]
+
 if USE_FORUM_APP:
     INSTALLED_APPS += ["forum"]
+
+if USE_FORUM_READ_APP:
+    INSTALLED_APPS += ["forum_read"]
 
 
 MIDDLEWARE = [

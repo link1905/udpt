@@ -329,7 +329,7 @@ SPEC.components.schema(
 
 
 SPEC.path(
-    path="/models/threads/records/",
+    path="/forum/api/models/threads/records/",
     operations={
         "get": {
             "tags": ["Threads"],
@@ -545,7 +545,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/threads/records/{pk}/",
+    path="/forum/api/models/threads/records/{pk}/",
     operations={
         "get": {
             "tags": ["Threads"],
@@ -643,7 +643,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/thread-votes/records/",
+    path="/forum/api/models/thread-votes/records/",
     operations={
         "get": {
             "tags": ["Thread Votes"],
@@ -758,7 +758,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/thread-votes/records/{pk}/",
+    path="/forum/api/models/thread-votes/records/{pk}/",
     operations={
         "get": {
             "tags": ["Thread Votes"],
@@ -856,7 +856,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/tagged-threads/records/",
+    path="/forum/api/models/tagged-threads/records/",
     operations={
         "get": {
             "tags": ["Tagged Threads"],
@@ -961,7 +961,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/tagged-threads/records/{pk}/",
+    path="/forum/api/models/tagged-threads/records/{pk}/",
     operations={
         "get": {
             "tags": ["Tagged Threads"],
@@ -1017,7 +1017,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/thread-categories/records/",
+    path="/forum/api/models/thread-categories/records/",
     operations={
         "get": {
             "tags": ["Thread Categories"],
@@ -1112,7 +1112,7 @@ SPEC.path(
 )
 
 SPEC.path(
-    path="/models/thread-categories/records/{pk}/",
+    path="/forum/api/models/thread-categories/records/{pk}/",
     operations={
         "get": {
             "tags": ["Thread Categories"],
