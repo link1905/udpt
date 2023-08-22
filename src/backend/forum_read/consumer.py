@@ -80,13 +80,14 @@ class Consumer:
     def __start_consuming(self):
         print("start consuming")
         self.channel.start_consuming()
-        print("close")
+        print("end consuming")
 
     def cancel(self):
-        print("cancel")
+        print("start canceling")
         self.channel.stop_consuming()
-        self.conn.close()
         try:
             self.thread.join()
+            self.conn.close()
         except Exception:
             pass
+        print("end canceling")

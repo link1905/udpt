@@ -13,6 +13,7 @@ services:
             - ./.envs/.local/.postgres
         environment:
             - USE_FORUM_READ_APP=False
+            - RABBIT_MQ_URL=udpt-rabbitmq
         ports:
             - 8000:8000
         command: /start
