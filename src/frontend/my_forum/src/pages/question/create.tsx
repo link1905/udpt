@@ -148,7 +148,7 @@ export function CreateQuestionPage() {
           </Input.Wrapper>
         </Paper>
         <Box>
-          <Button type="submit">Submit question</Button>
+          <Button type="submit" className="bg-blue-500 text-white border-blue-500">Submit question</Button>
         </Box>
       </Stack>
     </Box>
