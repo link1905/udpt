@@ -26,4 +26,5 @@ export interface Model<T> {
   pk: number;
   model: "taggit.tag";
   fields: T;
+  path: string;
 }

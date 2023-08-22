@@ -18,6 +18,9 @@ export function HomePage() {
   const [allCategories, setAllCategories] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [approvedThreads, setApprovedThreads] = useState<{
+    [key: number]: boolean;
+  }>({});
   const pageSize = 3;
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function HomePage() {
         .then((response) => {
           const totalCount = response.count;
           const threads = response.results.map((threadModel) => {
-            const thread = threadModel.fields;
+            const thread = threadModel; // Sửa đổi ở đây
             thread.path = `/question/${threadModel.pk}`;
             return thread;
           });
@@ -73,6 +76,15 @@ export function HomePage() {
         });
     }
   }, [value]);
+
+  useEffect(() => {
+    const storedApprovedThreadsString = localStorage.getItem("approvedThreads");
+    const storedApprovedThreads =
+      storedApprovedThreadsString !== null
+        ? JSON.parse(storedApprovedThreadsString)
+        : {};
+    setApprovedThreads(storedApprovedThreads);
+  }, []);
 
   const handleTabChange = (newValue: string) => {
     setValue(newValue);
@@ -161,7 +173,7 @@ export function HomePage() {
 
             {value === "all" && (
               <Tabs.Panel value="all" pt="xs" className="">
-                <div className="flex mt-5 flex-wrap w-[100%] justify-center ">
+                <div className="flex mt-5 flex-wrap w-[100%] ml-[30px] ">
                   {allThreads
                     .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                     .map((thread) => (
@@ -181,21 +193,33 @@ export function HomePage() {
                           target="_blank"
                         >
                           <Text weight={500} size="lg">
-                            {thread.pk}
-                          </Text>
-                          <Text weight={500} size="lg">
-                            {thread.title}
+                            {thread.fields.title}
                           </Text>
                           <div
-                            className="mt-[10px] text-gray-400"
-                            dangerouslySetInnerHTML={{ __html: thread.content }}
+                            className="mt-[2px] text-gray-400"
+                            dangerouslySetInnerHTML={{
+                              __html: thread.fields.content,
+                            }}
                           />
+
+                          {approvedThreads[thread.pk] ? (
+                            <Text
+                              className="text-[14px] font-bold"
+                              color="green"
+                            >
+                              Đã duyệt
+                            </Text>
+                          ) : (
+                            <Text className="text-[14px] font-bold" color="red">
+                              Đợi duyệt
+                            </Text>
+                          )}
                         </Card>
                       </NavLink>
                     ))}
                 </div>
                 <Pagination
-                className="mt-[20px]"
+                  className="mt-[20px]"
                   total={totalPages}
                   value={currentPage}
                   onChange={setCurrentPage}

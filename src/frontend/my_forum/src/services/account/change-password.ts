@@ -19,10 +19,8 @@ export async function requestChangePassword({
     }
   );
 
-  // Update local storage if needed
   if (localStorage.getItem(AUTH_LOCALSTORAGE_KEY)) {
-    // Update the local storage with the new token or clear it based on your authentication flow
   }
 
-  return data; // Return the updated user model
+  return data;
 }

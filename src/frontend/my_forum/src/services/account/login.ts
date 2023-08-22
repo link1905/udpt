@@ -8,12 +8,13 @@ export async function requestLogin({
   username: string;
   password: string;
 }) {
-  const { data } = await accountServiceClient.post<{ token: string }>(
-    "/models/users/login/",
-    {
-      username,
-      password,
-    },
-  );
+  const { data } = await accountServiceClient.post<{
+    token: string;
+    user: any;
+  }>("/models/users/login/", {
+    username,
+    password,
+  });
   localStorage.setItem(AUTH_LOCALSTORAGE_KEY, data.token);
+  return data; 
 }

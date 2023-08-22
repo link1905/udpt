@@ -8,8 +8,11 @@ import { HomePage } from "./home.tsx";
 import SignIn from "./sign-in.tsx";
 import SignUp from "./sign-up.tsx";
 import { LoginGuard } from "../components/login-guard/login-guard.tsx";
-import {AccountPage} from "./account.tsx";
-
+import { AccountPage } from "./account.tsx";
+import ManageThreads from "./admin/manage-threads/index.tsx";
+const NotFoundPage = () => {
+  return <div>404 - Page Not Found</div>;
+};
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -39,6 +42,11 @@ export const router = createBrowserRouter([
         path: "/account",
         element: <AccountPage />,
       },
+      {
+        path: "/admin/manage-threads",
+        element: <ManageThreads />,
+      },
+      
     ],
   },
   {
@@ -49,4 +57,8 @@ export const router = createBrowserRouter([
     path: "/signup",
     element: <SignUp />,
   },
+  {
+        path: "/404",
+        element: <NotFoundPage />,
+      },
 ]);

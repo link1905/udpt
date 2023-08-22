@@ -16,6 +16,7 @@ import { useForm } from "@mantine/form";
 import { useMutation } from "@tanstack/react-query";
 import { requestLogin } from "../services/account/login.ts";
 import { FormHelperText } from "@mui/material";
+import { AUTH_LOCALSTORAGE_KEY } from "../services/client.ts";
 
 const defaultTheme = createTheme();
 
@@ -23,8 +24,20 @@ export default function SignIn() {
   const navigate = useNavigate();
 
   const { mutate, isLoading, error } = useMutation(requestLogin, {
-    onSuccess() {
-      navigate("/");
+    onSuccess(data) {
+      const { token, user } = data;
+      localStorage.setItem(AUTH_LOCALSTORAGE_KEY, token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      console.log("User data:", user);
+      console.log("User data:", user);
+      if (user && user.fields.is_staff) {
+        console.log("User is staff, navigating to /admin/manage-threads");
+        navigate("/admin/manage-threads");
+      } else {
+        console.log("User is not staff, navigating to /");
+        navigate("/");
+      }
     },
   });
   const form = useForm({
@@ -84,7 +97,6 @@ export default function SignIn() {
             >
               {!!error && (
                 <FormHelperText error>
-                  {/*@ts-ignore*/}
                   {String(error.response.data.message)}
                 </FormHelperText>
               )}

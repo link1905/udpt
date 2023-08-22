@@ -20,5 +20,6 @@ export function LoginGuard({ children }: PropsWithChildren<{}>) {
   if (error) {
     return <Navigate to="/signin" />;
   }
+  
   return <>{children}</>;
 }
