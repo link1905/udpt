@@ -7,17 +7,16 @@ import {
   MultiSelectValueProps,
   rem,
   Flex,
+  MultiSelectProps,
 } from "@mantine/core";
+import {
+  getAllTagsQueryKey,
+  requestGetAllTags,
+} from "../../../services/tag/get-all-tags.ts";
+import { requestCreateTag } from "../../../services/tag/create-tag.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const countriesData = [
-  { label: "United States", value: "US" },
-  { label: "Great Britain", value: "GB" },
-  { label: "Finland", value: "FI" },
-  { label: "France", value: "FR" },
-  { label: "Russia", value: "RU" },
-];
-
-function Value({
+export function Value({
   // value,
   label,
   onRemove,
@@ -55,7 +54,7 @@ function Value({
   );
 }
 
-const Item = forwardRef<HTMLDivElement, SelectItemProps>(
+export const Item = forwardRef<HTMLDivElement, SelectItemProps>(
   (
     {
       label,
@@ -74,10 +73,42 @@ const Item = forwardRef<HTMLDivElement, SelectItemProps>(
   },
 );
 
-export function TagsInput() {
+export interface TagsInputProps
+  extends Partial<Omit<MultiSelectProps, "value" | "onChange">> {
+  value: number[];
+  onChange: (value: number[]) => void;
+}
+
+export function TagsInput({ onChange, value, ...props }: TagsInputProps) {
+  const queryClient = useQueryClient();
+  const { mutate } = useMutation(requestCreateTag, {
+    onSuccess(tagModel) {
+      onChange([...value, tagModel.pk]);
+      return queryClient.invalidateQueries(getAllTagsQueryKey);
+    },
+  });
+  const { data } = useQuery(getAllTagsQueryKey, requestGetAllTags, {
+    select: (data) =>
+      data.results.map((data) => ({
+        label: data.fields.name,
+        value: String(data.pk),
+      })),
+  });
+
   return (
     <MultiSelect
-      data={countriesData}
+      {...props}
+      value={value.map(String)}
+      onChange={(value) => onChange(value.map(Number))}
+      creatable
+      getCreateLabel={(query) => `+ Create tag ${query}`}
+      onCreate={(query) => {
+        mutate({
+          name: query,
+        });
+        return null;
+      }}
+      data={data || []}
       limit={20}
       valueComponent={Value}
       itemComponent={Item}

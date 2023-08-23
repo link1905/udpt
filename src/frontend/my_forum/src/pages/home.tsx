@@ -1,10 +1,94 @@
-import { Box, List, Card, Image, Text } from "@mantine/core";
+import { Card, Text } from "@mantine/core";
 import { NavLink } from "react-router-dom";
-import { Paper, Title, MultiSelect } from "@mantine/core";
+import { Paper, Title, MultiSelect, Select } from "@mantine/core";
 import { Tabs } from "@mantine/core";
 import { useState, useEffect } from "react";
+import { requestGetAllTags } from "../services/tag/get-all-tags";
+import { requestGetAllCategories } from "../services/forum/get-all-tags";
+import { requestGetAllThreads } from "../services/forum/get-all-thread";
+import { ThreadFields } from "../services/forum/forum.client";
+import { requestGetLatestThreads } from "../services/forum/get-all-thread";
+import { Pagination } from "@mantine/core";
 export function HomePage() {
   const [value, setValue] = useState<string>("all");
+  const [tagsOptions, setTagsOptions] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [allThreads, setAllThreads] = useState<ThreadFields[]>([]);
+  const [latestThreads, setLatestThreads] = useState<ThreadFields[]>([]);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [approvedThreads, setApprovedThreads] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const pageSize = 3;
+
+  useEffect(() => {
+    requestGetAllTags()
+      .then((tags) => {
+        const tagNames = tags.results.map((tag) => tag.fields.name);
+        setTagsOptions(tagNames);
+      })
+      .catch((error) => {
+        console.error("Error fetching tags:", error);
+      });
+
+    requestGetAllCategories()
+      .then((response) => {
+        const categoryOptions = response.results.map(
+          (category) => category.fields.name
+        );
+        setAllCategories(categoryOptions);
+      })
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
+      });
+
+    if (value === "all") {
+      requestGetAllThreads()
+        .then((response) => {
+          const totalCount = response.count;
+          const threads = response.results.map((threadModel) => {
+            const thread = threadModel; // Sửa đổi ở đây
+            thread.path = `/question/${threadModel.pk}`;
+            return thread;
+          });
+
+          setAllThreads(threads);
+          setTotalPages(Math.ceil(totalCount / pageSize));
+        })
+        .catch((error) => {
+          console.error("Error fetching threads:", error);
+        });
+    }
+    if (value === "latest") {
+      requestGetLatestThreads()
+        .then((response) => {
+          const threads = response.results.map((threadModel) => {
+            const thread = threadModel.fields;
+            thread.path = `/question/${threadModel.pk}`;
+            return thread;
+          });
+          setLatestThreads(threads);
+        })
+        .catch((error) => {
+          console.error("Error fetching latest threads:", error);
+        });
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const storedApprovedThreadsString = localStorage.getItem("approvedThreads");
+    const storedApprovedThreads =
+      storedApprovedThreadsString !== null
+        ? JSON.parse(storedApprovedThreadsString)
+        : {};
+    setApprovedThreads(storedApprovedThreads);
+  }, []);
+
+  const handleTabChange = (newValue: string) => {
+    setValue(newValue);
+  };
   return (
     <>
       {/* <Box>
@@ -38,35 +122,19 @@ export function HomePage() {
           className="w-[90%] m-auto h-[100vh] "
         >
           <Paper withBorder className="w-[100%] p-2 flex justify-between">
-            <MultiSelect
-              data={[
-                "React",
-                "Angular",
-                "Svelte",
-                "Vue",
-                "Riot",
-                "Next.js",
-                "Blitz.js",
-              ]}
+            <Select
+              data={allCategories}
               placeholder="All Categories"
-              defaultValue={["react", "next"]}
               clearButtonProps={{ "aria-label": "Clear selection" }}
               clearable
               size="sm"
               className="w-[35%]"
             />
             <MultiSelect
-              data={[
-                "Cloud",
-                "Driver",
-                "Import",
-                "Spring",
-                "Browser",
-                "Operations",
-                "Performance",
-              ]}
+              data={tagsOptions}
               placeholder="All Tags"
-              defaultValue={["react", "next"]}
+              value={selectedTags}
+              onChange={setSelectedTags}
               clearButtonProps={{ "aria-label": "Clear selection" }}
               clearable
               size="sm"
@@ -82,12 +150,20 @@ export function HomePage() {
               Create question
             </NavLink>
           </Paper>
-          <Tabs className="mt-4" defaultValue="gallery">
+          <Tabs className="mt-4" defaultValue="all" variant="pills">
             <Tabs.List>
-              <Tabs.Tab className="text-[18px] pl-0" value="latest">
+              <Tabs.Tab
+                className="text-[18px] pl-0 pl-2"
+                value="latest"
+                onClick={() => handleTabChange("latest")}
+              >
                 Latest questions
               </Tabs.Tab>
-              <Tabs.Tab className="text-[18px]" value="all">
+              <Tabs.Tab
+                className="text-[18px]"
+                value="all"
+                onClick={() => handleTabChange("all")}
+              >
                 All questions
               </Tabs.Tab>
               <Tabs.Tab className="text-[18px]" value="most">
@@ -95,57 +171,99 @@ export function HomePage() {
               </Tabs.Tab>
             </Tabs.List>
 
-            <Tabs.Panel value="latest" pt="xs">
-              Latest questions
-            </Tabs.Panel>
-
             {value === "all" && (
               <Tabs.Panel value="all" pt="xs" className="">
+                <div className="flex mt-5 flex-wrap w-[100%] ml-[30px] ">
+                  {allThreads
+                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                    .map((thread) => (
+                      <NavLink
+                        key={thread.pk}
+                        to={thread.path}
+                        className="mr-4"
+                      >
+                        <Card
+                          key={thread.pk}
+                          className="mr-4 mt-6 w-[330px] h-[110px]"
+                          withBorder
+                          radius={7}
+                          shadow="sm"
+                          padding="md"
+                          component="a"
+                          target="_blank"
+                        >
+                          <Text weight={500} size="lg">
+                            {thread.fields.title}
+                          </Text>
+                          <div
+                            className="mt-[2px] text-gray-400"
+                            dangerouslySetInnerHTML={{
+                              __html: thread.fields.content,
+                            }}
+                          />
+
+                          {approvedThreads[thread.pk] ? (
+                            <Text
+                              className="text-[14px] font-bold"
+                              color="green"
+                            >
+                              Đã duyệt
+                            </Text>
+                          ) : (
+                            <Text className="text-[14px] font-bold" color="red">
+                              Đợi duyệt
+                            </Text>
+                          )}
+                        </Card>
+                      </NavLink>
+                    ))}
+                </div>
+                <Pagination
+                  className="mt-[20px]"
+                  total={totalPages}
+                  value={currentPage}
+                  onChange={setCurrentPage}
+                  position="center"
+                  styles={(theme) => ({
+                    control: {
+                      "&[data-active]": {
+                        backgroundImage: theme.fn.gradient({
+                          from: "red",
+                          to: "yellow",
+                        }),
+                        border: 0,
+                      },
+                    },
+                  })}
+                />
+              </Tabs.Panel>
+            )}
+
+            {value === "latest" && (
+              <Tabs.Panel value="latest" pt="xs">
                 <div className="flex mt-5">
-                  <Card
-                    className="mr-4"
-                    withBorder
-                    radius={7}
-                    shadow="sm"
-                    padding="md"
-                    component="a"
-                    target="_blank"
-                  >
-                    <Text weight={500} size="lg" mt="md">
-                      I can't install NodeJs !!. Please help me.
-                    </Text>
-
-                    <Text mt="xs" color="dimmed" size="sm">
-                      I have lot's of nodes of the same type, that have a
-                      propery "genres" as a List of Strings. I want to select
-                      one of these nodes and compare them to all other nodes in
-                      the database only according to this one property. Nodes
-                      with a huge intersection between the lists should come on
-                      top
-                    </Text>
-                  </Card>
-
-                  <Card
-                    withBorder
-                    radius={7}
-                    shadow="sm"
-                    padding="md"
-                    component="a"
-                    target="_blank"
-                  >
-                    <Text weight={500} size="lg" mt="md">
-                      I can't install NodeJs !!. Please help me.
-                    </Text>
-
-                    <Text mt="xs" color="dimmed" size="sm">
-                      I have lot's of nodes of the same type, that have a
-                      propery "genres" as a List of Strings. I want to select
-                      one of these nodes and compare them to all other nodes in
-                      the database only according to this one property. Nodes
-                      with a huge intersection between the lists should come on
-                      top
-                    </Text>
-                  </Card>
+                  {latestThreads.map((thread) => (
+                    <NavLink key={thread.pk} to={thread.path} className="mr-4">
+                      <Card
+                        key={thread.pk}
+                        className="mr-4"
+                        withBorder
+                        radius={7}
+                        shadow="sm"
+                        padding="md"
+                        component="a"
+                        target="_blank"
+                      >
+                        <Text weight={500} size="lg">
+                          {thread.title}
+                        </Text>
+                        <div
+                          className="mt-[10px] text-gray-400"
+                          dangerouslySetInnerHTML={{ __html: thread.content }}
+                        />
+                      </Card>
+                    </NavLink>
+                  ))}
                 </div>
               </Tabs.Panel>
             )}

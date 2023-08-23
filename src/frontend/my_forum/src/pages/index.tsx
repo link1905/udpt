@@ -5,14 +5,22 @@ import { CreateQuestionPage } from "./question/create.tsx";
 import { ViewQuestionPage } from "./question/view.tsx";
 import { ListQuestionPage } from "./question/list.tsx";
 import { HomePage } from "./home.tsx";
-import LogIn from "./sign_in/LogIn.tsx";
-import SignUp from "./sign_up/SignUp.tsx";
-
+import SignIn from "./sign-in.tsx";
+import SignUp from "./sign-up.tsx";
+import { LoginGuard } from "../components/login-guard/login-guard.tsx";
+import { AccountPage } from "./account.tsx";
+import ManageThreads from "./admin/manage-threads/index.tsx";
+const NotFoundPage = () => {
+  return <div>404 - Page Not Found</div>;
+};
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
-
+    element: (
+      <LoginGuard>
+        <Layout />
+      </LoginGuard>
+    ),
     children: [
       {
         path: "/",
@@ -31,13 +39,26 @@ export const router = createBrowserRouter([
         element: <ListQuestionPage />,
       },
       {
-        path: "/signin",
-        element: <LogIn />,
+        path: "/account",
+        element: <AccountPage />,
       },
       {
-        path: "/signup",
-        element: <SignUp />,
+        path: "/admin/manage-threads",
+        element: <ManageThreads />,
       },
+      
     ],
   },
+  {
+    path: "/signin",
+    element: <SignIn />,
+  },
+  {
+    path: "/signup",
+    element: <SignUp />,
+  },
+  {
+        path: "/404",
+        element: <NotFoundPage />,
+      },
 ]);

@@ -1,4 +1,3 @@
-import * as React from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -13,21 +12,42 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "@mantine/form";
+import { useMutation } from "@tanstack/react-query";
+import { requestLogin } from "../services/account/login.ts";
+import { FormHelperText } from "@mui/material";
+import { AUTH_LOCALSTORAGE_KEY } from "../services/client.ts";
 
 const defaultTheme = createTheme();
 
-export default function LogIn() {
+export default function SignIn() {
   const navigate = useNavigate();
+
+  const { mutate, isLoading, error } = useMutation(requestLogin, {
+    onSuccess(data) {
+      const { token, user } = data;
+      localStorage.setItem(AUTH_LOCALSTORAGE_KEY, token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      console.log("User data:", user);
+      console.log("User data:", user);
+      if (user && user.fields.is_staff) {
+        console.log("User is staff, navigating to /admin/manage-threads");
+        navigate("/admin/manage-threads");
+      } else {
+        console.log("User is not staff, navigating to /");
+        navigate("/");
+      }
+    },
+  });
+  const form = useForm({
+    initialValues: {
+      username: "",
+      password: "",
+    },
+  });
   const handleSignUp = () => {
     navigate("/signup");
-  };
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
   };
 
   return (
@@ -70,34 +90,42 @@ export default function LogIn() {
             <Box
               component="form"
               noValidate
-              onSubmit={handleSubmit}
+              onSubmit={form.onSubmit((loginValues) => {
+                mutate(loginValues);
+              })}
               sx={{ mt: 1 }}
             >
+              {!!error && (
+                <FormHelperText error>
+                  {String(error.response.data.message)}
+                </FormHelperText>
+              )}
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
+                id="username"
+                label="Username"
+                autoComplete="username"
                 autoFocus
+                {...form.getInputProps("username")}
               />
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                name="password"
                 label="Password"
                 type="password"
                 id="password"
                 autoComplete="current-password"
+                {...form.getInputProps("password")}
               />
               <FormControlLabel
                 control={<Checkbox value="remember" color="primary" />}
                 label="Remember me"
               />
               <Button
+                disabled={isLoading}
                 type="submit"
                 fullWidth
                 variant="contained"
