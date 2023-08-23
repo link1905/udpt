@@ -62,7 +62,7 @@ class ThreadCategory(models.Model):
 
 class Thread(models.Model):
     title = models.CharField(max_length=255, default="", db_index=True)
-    content = models.TextField(db_index=True)
+    content = models.TextField()
     category = models.ForeignKey(ThreadCategory, on_delete=models.CASCADE, null=True, blank=True, related_name="threads")
 
     creator_id = models.PositiveIntegerField(db_index=True)
