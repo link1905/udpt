@@ -4,7 +4,7 @@ import { Paper, Title, MultiSelect, Select } from "@mantine/core";
 import { Tabs } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { requestGetAllTags } from "../services/tag/get-all-tags";
-import { requestGetAllCategories } from "../services/forum/get-all-tags";
+import { requestGetAllCategories } from "../services/forum/get-all-categories";
 import { requestGetAllThreads } from "../services/forum/get-all-thread";
 import { ThreadFields } from "../services/forum/forum.client";
 import { requestGetLatestThreads } from "../services/forum/get-all-thread";
@@ -192,17 +192,7 @@ export function HomePage() {
                           component="a"
                           target="_blank"
                         >
-                          <Text weight={500} size="lg">
-                            {thread.fields.title}
-                          </Text>
-                          <div
-                            className="mt-[2px] text-gray-400"
-                            dangerouslySetInnerHTML={{
-                              __html: thread.fields.content,
-                            }}
-                          />
-
-                          {approvedThreads[thread.pk] ? (
+                           {approvedThreads[thread.pk] ? (
                             <Text
                               className="text-[14px] font-bold"
                               color="green"
@@ -214,6 +204,17 @@ export function HomePage() {
                               Đợi duyệt
                             </Text>
                           )}
+                          <Text weight={500} size="lg">
+                            {thread.fields.title}
+                          </Text>
+                          <div
+                            className="mt-[17px] text-gray-400"
+                            dangerouslySetInnerHTML={{
+                              __html: thread.fields.content,
+                            }}
+                          />
+
+                         
                         </Card>
                       </NavLink>
                     ))}

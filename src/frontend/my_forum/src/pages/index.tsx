@@ -10,6 +10,8 @@ import SignUp from "./sign-up.tsx";
 import { LoginGuard } from "../components/login-guard/login-guard.tsx";
 import { AccountPage } from "./account.tsx";
 import ManageThreads from "./admin/manage-threads/index.tsx";
+import ManageCategories from "./admin/manage-categories/index.tsx";
+import ManageTags from "./admin/manage-tags/index.tsx";
 const NotFoundPage = () => {
   return <div>404 - Page Not Found</div>;
 };
@@ -46,7 +48,14 @@ export const router = createBrowserRouter([
         path: "/admin/manage-threads",
         element: <ManageThreads />,
       },
-      
+      {
+        path: "/admin/manage-categories",
+        element: <ManageCategories />,
+      },
+      {
+        path: "/admin/manage-tags",
+        element: <ManageTags/>,
+      },
     ],
   },
   {
@@ -58,7 +67,7 @@ export const router = createBrowserRouter([
     element: <SignUp />,
   },
   {
-        path: "/404",
-        element: <NotFoundPage />,
-      },
+    path: "/404",
+    element: <NotFoundPage />,
+  },
 ]);

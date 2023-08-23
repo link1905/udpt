@@ -4,7 +4,7 @@ import { requestCreateCategory } from "../../../services/forum/create-category.t
 import {
   getAllCategoriesQueryKey,
   requestGetAllCategories,
-} from "../../../services/forum/get-all-tags.ts";
+} from "../../../services/forum/get-all-categories.ts";
 import { Item } from "../tags-input";
 
 export interface TagsInputProps

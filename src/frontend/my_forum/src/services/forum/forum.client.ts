@@ -5,6 +5,7 @@ export const forumServiceClient = axios.create(createAxiosConfig("/forum/api"));
 
 export interface CategoryFields {
   name: string;
+  created: string;
 }
 interface ThreadFieldsData {
   title: string;

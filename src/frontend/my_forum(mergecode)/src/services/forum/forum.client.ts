@@ -5,6 +5,7 @@ export const forumServiceClient = axios.create(createAxiosConfig("/forum/api"));
 
 export interface CategoryFields {
   name: string;
+  created: string;
 }
 interface ThreadFieldsData {
   title: string;
@@ -21,19 +22,13 @@ interface ThreadFieldsData {
   updated: string;
   thread: number;
 }
-export interface TaggedThreadFields {
-  tag_id: number;
-  tag_name: string;
-  thread_id: number;
-}
+
 export interface ThreadFields {
   pk: number;
   title: string;
   content: string;
   creator_email: string;
   creator_name: string;
-  approver_name: string;
-  approver_email: string;
   created: string;
   path: string;
   fields: ThreadFieldsData;
@@ -49,4 +44,9 @@ export interface UpdateThread {
   title: string;
   content: string;
   approved: boolean;
+}
+export interface TaggedThreadFields {
+  tag_id: number;
+  tag_name: string;
+  thread_id: number;
 }
