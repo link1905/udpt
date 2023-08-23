@@ -44,22 +44,30 @@ const ManageThreads = () => {
   };
 
   const handleEditStatus = (pk: number) => {
-    const updatedApprovedThreads = { ...approvedThreads, [pk]: true };
-    setApprovedThreads(updatedApprovedThreads);
+    const threadToUpdate = threads.find((thread) => thread.pk === pk);
 
-    localStorage.setItem(
-      "approvedThreads",
-      JSON.stringify(updatedApprovedThreads)
-    );
+    if (threadToUpdate) {
+      const updatedData = {
+        ...threadToUpdate.fields,
+        approved: true, // Update the approved status
+      };
 
-    const updateData = { approved: true };
-    requestUpdateThread(pk, updateData)
-      .then((updatedThread) => {
-        console.log("Thread updated:", updatedThread);
-      })
-      .catch((error) => {
-        console.error("Error updating thread:", error);
-      });
+      requestUpdateThread(pk, updatedData)
+        .then(() => {
+          const updatedThreads = threads.map((thread) =>
+            thread.pk === pk ? { ...thread, fields: updatedData } : thread
+          );
+          setThreads(updatedThreads);
+          setApprovedThreads((prevApprovedThreads) => ({
+            ...prevApprovedThreads,
+            [pk]: true, // Update the approved status in the local state
+          }));
+          localStorage.setItem("approvedThreads", JSON.stringify({ ...approvedThreads, [pk]: true }));
+        })
+        .catch((error) => {
+          console.error("Error updating thread:", error);
+        });
+    }
   };
 
   const columns = [
@@ -91,7 +99,7 @@ const ManageThreads = () => {
             onClick={() => handleEditStatus(rowData.pk)}
             disabled={approvedThreads[rowData.pk]}
           >
-            <IconAt/> Edit
+            <IconAt /> Edit
           </Button>
         </div>
       ),
@@ -106,7 +114,7 @@ const ManageThreads = () => {
           color="red"
           onClick={() => handleDeleteThread(rowData.pk)}
         >
-            <IconTrash /> Delete
+          <IconTrash /> Delete
         </Button>
       ),
     },

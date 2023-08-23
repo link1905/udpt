@@ -17,7 +17,12 @@ import { ListResponse } from "../client.ts";
 export const requestGetAllThreads = (parent: string | number) =>
   forumServiceClient
     .get<ListResponse<ThreadFields>>(
-      `/models/threads/records/` + (parent ? `?parent=${parent}` : "")
+      `/models/threads/records/` + (parent ? `?parent=${parent}` : ""),
+      {
+        params: {
+          include_approved_status: true, 
+        },
+      }
     )
     .then((res) => res.data);
 
