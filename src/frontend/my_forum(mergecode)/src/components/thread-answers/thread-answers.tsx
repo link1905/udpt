@@ -21,7 +21,7 @@ import { UserAvatar } from "../user-avatar/user-avatar.tsx";
 
 export function ThreadAnswers({ id }: { id: string }) {
   const { data } = useQuery(getAllThreadsQueryKey(id), () =>
-    requestGetAllThreads(id),
+    requestGetAllThreads(id)
   );
   return (
     <Stack>
@@ -39,14 +39,32 @@ export function ThreadAnswers({ id }: { id: string }) {
                     <UserAvatar id={threadModel?.fields?.creator_id} />
                   )}
                   <Box>
-                    {threadModel?.fields?.content && (
+                  
+                    {threadModel?.fields?.approved ? (
                       <div
+                        dangerouslySetInnerHTML={{
+                          __html: threadModel.fields.content,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="opacity-50" // Thêm lớp để hiển thị mờ
                         dangerouslySetInnerHTML={{
                           __html: threadModel.fields.content,
                         }}
                       />
                     )}
                   </Box>
+                  {/* Hiển thị trạng thái */}
+                  {threadModel?.fields?.approved ? (
+                    <Text className="text-[14px] font-bold" color="green">
+                      Đã duyệt
+                    </Text>
+                  ) : (
+                    <Text className="text-[14px] font-bold" color="red">
+                      Đợi duyệt
+                    </Text>
+                  )}
                 </Stack>
                 <Divider my="md" />
                 <ThreadComments id={threadModel.pk} />

@@ -61,15 +61,20 @@ export function HomePage() {
         console.error("Error fetching categories:", error);
       });
 
-    if (value === "all") {
+    if (value === "all" && selectedCategory === null) {
       requestGetAllThreads()
         .then(async (response) => {
           const totalCount = response.count;
-          const threads = response.results.map((threadModel) => {
-            const thread = threadModel;
-            thread.path = `/question/${threadModel.pk}`;
-            return thread;
-          });
+          const threads = response.results
+            .filter((threadModel) => {
+              // Bỏ qua thread con (có parent khác null)
+              return threadModel.fields.parent === null;
+            })
+            .map((threadModel) => {
+              const thread = threadModel;
+              thread.path = `/question/${threadModel.pk}`;
+              return thread;
+            });
 
           const filtered = threads.filter((thread) => {
             if (selectedCategory && thread.category === selectedCategory) {

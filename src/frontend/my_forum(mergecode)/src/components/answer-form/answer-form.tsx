@@ -50,7 +50,7 @@ export function AnswerForm({
       />
       <DetailEditor {...form.getInputProps("content")} />
       <Group mt="md">
-        <Button type="submit" loading={isLoading}>
+        <Button type="submit" loading={isLoading} className="bg-blue-500 text-white border-blue-500">
           SUBMIT
         </Button>
       </Group>

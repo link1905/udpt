@@ -15,7 +15,7 @@ export interface ThreadFields {
   creator_id: number;
   creator_name: string;
   creator_email: string;
-  parent: number;
+  parent: number | null;
   approved: boolean;
   approver_id: number;
   approver_name: string;
@@ -23,6 +23,7 @@ export interface ThreadFields {
   created: string;
   updated: string;
   thread: number;
+  
 }
 
 export interface CreateThreadForm {

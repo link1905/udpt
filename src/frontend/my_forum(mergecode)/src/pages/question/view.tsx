@@ -81,7 +81,7 @@ export function ViewQuestionPage() {
                 {data?.fields?.approver_name || data?.fields?.approver_email}
               </Group>
               <Group>
-                <Button>Report</Button>
+                <Button className="bg-blue-500 text-white border-blue-500">Report</Button>
               </Group>
             </Stack>
           </Box>

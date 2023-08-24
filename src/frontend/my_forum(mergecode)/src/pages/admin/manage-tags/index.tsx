@@ -99,6 +99,7 @@ const ManageTags = () => {
         opened={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       >
+        
         <Paper padding="lg">
           <Input
             placeholder="Tag Name"
