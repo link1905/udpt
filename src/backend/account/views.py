@@ -77,7 +77,7 @@ def user_self_filterer(ctx: Context, _: Optional[Iterable[Any]]) -> Iterable[Any
     meta["count"] = 1
     ctx[META_CONTEXT_KEY] = meta
 
-    return [ctx[USER_CONTEXT_KEY]]
+    return User.objects.filter(pk=ctx[USER_CONTEXT_KEY].pk)
 
 
 def auth_refresh_service(ctx: Context) -> HttpResponse:
@@ -181,6 +181,7 @@ user_detail_update_delete_view = context_view()(
             service=detail_service(
                 model_serializer(fields=USER_EXPOSED_FIELDS),
                 user_self_filterer,
+                model_pk_filterer(),
             ),  # normal users
         ),
         method_layer(
@@ -199,6 +200,7 @@ user_detail_update_delete_view = context_view()(
                 model_mutator(UserChangeForm),
                 model_serializer(fields=USER_EXPOSED_FIELDS),
                 user_self_filterer,
+                model_pk_filterer(),
             ),  # normal users
         ),
         case_layer(
@@ -213,6 +215,7 @@ user_detail_update_delete_view = context_view()(
         service=delete_service(
             model_delete_mutator,
             user_self_filterer,
+            model_pk_filterer(),
         ),
     )
 )
