@@ -128,12 +128,7 @@ const ManageCategories = () => {
           {visibleCategories.map((category) => (
             <tr key={category.pk}>
               {columns.map((column) => (
-                <td
-                  key={column.name}
-                  className={`px-4 py-2 ${
-                    column.title === "Delete" ? "text-center" : ""
-                  } ${column.title === "Date created" ? "text-center" : ""}`}
-                >
+                <td key={column.name} className="px-4 py-2 text-center">
                   {column.render
                     ? column.render(category)
                     : column.name === "pk" // Render pk explicitly

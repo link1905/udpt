@@ -81,7 +81,7 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button onClick={() => navigate("/signin")}>Login</Button>
+              <Button onClick={() => navigate("/signin")} className="bg-blue-500 text-white border-blue-500">Login</Button>
             )}
           </Box>
         </Group>

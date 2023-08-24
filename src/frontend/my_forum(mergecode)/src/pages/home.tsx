@@ -11,6 +11,7 @@ import { requestGetLatestThreads } from "../services/forum/get-all-thread";
 import { Pagination } from "@mantine/core";
 import { requestGetThreadTags } from "../services/forum/get-thread-tags";
 import { requestGetCategory } from "../services/forum/get-category";
+import { format } from "date-fns";
 export function HomePage() {
   const [value, setValue] = useState<string>("all");
   const [tagsOptions, setTagsOptions] = useState<string[]>([]);
@@ -26,7 +27,7 @@ export function HomePage() {
   const [approvedThreads, setApprovedThreads] = useState<{
     [key: number]: boolean;
   }>({});
-  const pageSize = 3;
+  const pageSize = 9;
   const [threadTags, setThreadTags] = useState<{ [key: number]: string[] }>({});
   const [filteredThreads, setFilteredThreads] = useState<ThreadFields[]>([]);
   async function fetchThreadTags(threadId) {
@@ -96,7 +97,9 @@ export function HomePage() {
           setTotalPages(Math.ceil(totalCount / pageSize));
           Promise.all(
             threads.map(async (thread) => {
-              const categoryResponse = await requestGetCategory(thread.pk);
+              const categoryResponse = await requestGetCategory(
+                thread.fields.category
+              );
               const categoryName =
                 categoryResponse.results[0]?.fields.name || "";
               const updatedThread = { ...thread, categoryName };
@@ -104,14 +107,10 @@ export function HomePage() {
             })
           )
             .then((updatedThreads) => {
-              const threadTagsMap = {};
-              updatedThreads.forEach((thread) => {
-                threadTagsMap[thread.pk] = thread.tags;
-              });
-              setThreadTags(threadTagsMap);
+              setFilteredThreads(updatedThreads);
             })
             .catch((error) => {
-              console.error("Error fetching thread tags:", error);
+              console.error("Error fetching thread categories:", error);
             });
           Promise.all(threads.map((thread) => fetchThreadTags(thread.pk)))
             .then((tagsArray) => {
@@ -127,20 +126,6 @@ export function HomePage() {
         })
         .catch((error) => {
           console.error("Error fetching threads:", error);
-        });
-    }
-    if (value === "latest") {
-      requestGetLatestThreads()
-        .then((response) => {
-          const threads = response.results.map((threadModel) => {
-            const thread = threadModel.fields;
-            thread.path = `/question/${threadModel.pk}`;
-            return thread;
-          });
-          setLatestThreads(threads);
-        })
-        .catch((error) => {
-          console.error("Error fetching latest threads:", error);
         });
     }
   }, [value]);
@@ -189,7 +174,7 @@ export function HomePage() {
           radius="md"
           p="lg"
           withBorder
-          className="w-[90%] m-auto h-[100vh] "
+          className="w-[90%] m-auto  "
         >
           <Paper withBorder className="w-[100%] p-2 flex justify-between">
             <Select
@@ -325,31 +310,85 @@ export function HomePage() {
             )}
 
             {value === "latest" && (
-              <Tabs.Panel value="latest" pt="xs">
-                <div className="flex mt-5">
-                  {latestThreads.map((thread) => (
-                    <NavLink key={thread.pk} to={thread.path} className="mr-4">
-                      <Card
+              <Tabs.Panel value="latest" pt="xs" className="">
+                <div className="flex mt-5 flex-wrap w-[100%] ml-[30px] ">
+                  {filteredThreads
+                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                    .filter((thread) => approvedThreads[thread.pk])
+                    .map((thread) => (
+                      
+                      <NavLink
                         key={thread.pk}
+                        to={thread.path}
                         className="mr-4"
-                        withBorder
-                        radius={7}
-                        shadow="sm"
-                        padding="md"
-                        component="a"
-                        target="_blank"
                       >
-                        <Text weight={500} size="lg">
-                          {thread.title}
-                        </Text>
-                        <div
-                          className="mt-[10px] text-gray-400"
-                          dangerouslySetInnerHTML={{ __html: thread.content }}
-                        />
-                      </Card>
-                    </NavLink>
-                  ))}
+                        <Card
+                          key={thread.pk}
+                          className="mr-4 mt-6 w-[330px] h-[150px]"
+                          withBorder
+                          radius={7}
+                          shadow="sm" 
+                          padding="md"
+                          component="a"
+                          target="_blank"
+                        >
+                          {approvedThreads[thread.pk] ? (
+                            <Text
+                              className="text-[14px] font-bold"
+                              color="green"
+                            >
+                              Đã duyệt
+                            </Text>
+                          ) : (
+                            <Text className="text-[14px] font-bold" color="red">
+                              Đợi duyệt
+                            </Text>
+                          )}
+                          <Text className="text-gray-600">
+                            Category: {thread.fields.category}
+                          </Text>
+                          <div className="flex flex-wrap  ml-[-5px]">
+                            {threadTags[thread.pk]?.map((tagName) => (
+                              <Badge key={tagName} className="mr-1">
+                                {tagName}
+                              </Badge>
+                            ))}
+                          </div>
+                          <Text weight={400} size="md">
+                            {format(new Date(thread.fields.created), "MMMM dd, yyyy")}
+                          </Text>
+                          <Text weight={500} size="lg">
+                            Title: {thread.fields.title}
+                          </Text>
+                          
+                          <div
+                            className="mt-[17px] text-gray-400"
+                            dangerouslySetInnerHTML={{
+                              __html: thread.fields.content,
+                            }}
+                          />
+                        </Card>
+                      </NavLink>
+                    ))}
                 </div>
+                <Pagination
+                  className="mt-[20px]"
+                  total={totalPages}
+                  value={currentPage}
+                  onChange={setCurrentPage}
+                  position="center"
+                  styles={(theme) => ({
+                    control: {
+                      "&[data-active]": {
+                        backgroundImage: theme.fn.gradient({
+                          from: "red",
+                          to: "yellow",
+                        }),
+                        border: 0,
+                      },
+                    },
+                  })}
+                />
               </Tabs.Panel>
             )}
 

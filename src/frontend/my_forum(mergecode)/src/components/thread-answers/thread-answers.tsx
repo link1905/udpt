@@ -27,6 +27,8 @@ export function ThreadAnswers({ id }: { id: string }) {
     <Stack>
       {data &&
         data.results.map((threadModel) => (
+          // Format the date as "year month date" if it's valid
+
           <Paper key={threadModel.pk} withBorder p="xl" mb="xl">
             <Group align="start">
               <Box>
@@ -39,7 +41,6 @@ export function ThreadAnswers({ id }: { id: string }) {
                     <UserAvatar id={threadModel?.fields?.creator_id} />
                   )}
                   <Box>
-                  
                     {threadModel?.fields?.approved ? (
                       <div
                         dangerouslySetInnerHTML={{

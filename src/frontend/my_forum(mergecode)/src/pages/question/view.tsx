@@ -27,27 +27,34 @@ import { AnswerForm } from "../../components/answer-form";
 import { ThreadAnswers } from "../../components/thread-answers/thread-answers.tsx";
 import { ThreadVotes } from "../../components/thread-votes/thread-votes.tsx";
 import { UserAvatar } from "../../components/user-avatar/user-avatar.tsx";
-
+import { format } from "date-fns";
 export function ViewQuestionPage() {
+  
+
   const { id } = useParams<"id">();
   const { data, isLoading } = useQuery(
     getThreadQueryKey(id || ""),
     () => requestGetThread(id || ""),
     {
       enabled: !!id,
-    },
+    }
   );
   const { data: tagsData } = useQuery(threadTagsQueryKey, () =>
-    requestGetThreadTags(id || ""),
+    requestGetThreadTags(id || "")
   );
+  const createdDate = data?.fields?.created ? new Date(data.fields.created) : null;
 
+  // Format the date as "year month date" if it's valid
+  const formattedDate = createdDate
+    ? `${createdDate.getFullYear()} ${createdDate.toLocaleString('default', { month: 'long' })} ${createdDate.getDate()}`
+    : 'Invalid Date';
   return (
     <Box>
       <LoadingOverlay visible={isLoading} />
       <Group position="apart">
         <Box>
           <Title fw={400}>{data?.fields?.title}</Title>
-          <Text fz="xs">Asked at {data?.fields?.created}</Text>
+          <Text fz="xs">Asked at {formattedDate}</Text>
         </Box>
         <Box>
           <NavLink to="/question/create">
@@ -60,7 +67,9 @@ export function ViewQuestionPage() {
           <Box>{id && <ThreadVotes id={id} />}</Box>
           <Box sx={{ flex: 1 }}>
             <Stack align="start">
-              {data?.fields?.creator_id && <UserAvatar id={data?.fields?.creator_id} />}
+              {data?.fields?.creator_id && (
+                <UserAvatar id={data?.fields?.creator_id} />
+              )}
               <Box>
                 {data?.fields?.content && (
                   <div
@@ -81,7 +90,9 @@ export function ViewQuestionPage() {
                 {data?.fields?.approver_name || data?.fields?.approver_email}
               </Group>
               <Group>
-                <Button className="bg-blue-500 text-white border-blue-500">Report</Button>
+                <Button className="bg-blue-500 text-white border-blue-500">
+                  Report
+                </Button>
               </Group>
             </Stack>
           </Box>

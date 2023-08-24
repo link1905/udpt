@@ -20,19 +20,23 @@ export const requestGetAllThreads = (parent: string | number) =>
       `/models/threads/records/` + (parent ? `?parent=${parent}` : ""),
       {
         params: {
-          include_approved_status: true, 
+          include_approved_status: true,
         },
       }
     )
     .then((res) => res.data);
 
-export const requestGetLatestThreads = () =>
+export const requestGetLatestThreads = (parent: string | number) =>
   forumServiceClient
-    .get<ListResponse<ThreadFields>>(`/models/threads/records/`, {
-      params: {
-        ordering: "-fields.created",
-      },
-    })
+    .get<ListResponse<ThreadFields>>(
+      `/models/threads/records/` + (parent ? `?parent=${parent}` : ""),
+      {
+        params: {
+          include_approved_status: true,
+          ordering: "-fields.created",
+        },
+      }
+    )
     .then((res) => res.data);
 
 export const getAllThreadsQueryKey = (parent: string | number) =>

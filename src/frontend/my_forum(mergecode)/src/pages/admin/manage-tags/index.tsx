@@ -61,6 +61,7 @@ const ManageTags = () => {
   };
 
   const columns = [
+    { name: "pk", title: "ID" },
     { name: "name", title: "Name" },
     {
       title: "Delete",
@@ -99,7 +100,6 @@ const ManageTags = () => {
         opened={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       >
-        
         <Paper padding="lg">
           <Input
             placeholder="Tag Name"
@@ -143,16 +143,31 @@ const ManageTags = () => {
         <tbody>
           {visibleTags.map((tag) => (
             <tr key={tag.pk}>
-              {columns.map((column) => (
-                <td
-                  key={column.name}
-                  className={`px-4 py-2 ${
-                    column.title === "Delete" ? "text-center" : ""
-                  }`}
-                >
-                  {column.render ? column.render(tag) : tag.fields[column.name]}
-                </td>
-              ))}
+              <td
+                key="pk"
+                className={`px-4 py-2 text-center ${
+                  columns.find((column) => column.name === "pk").title ===
+                  "Delete"
+                    ? "text-center"
+                    : ""
+                }`}
+              >
+                {tag.pk}
+              </td>
+              {columns
+                .filter((column) => column.name !== "pk")
+                .map((column) => (
+                  <td
+                    key={column.name}
+                    className={`px-4 py-2 ${
+                      column.title === "Delete" ? "text-center" : ""
+                    }`}
+                  >
+                    {column.render
+                      ? column.render(tag)
+                      : tag.fields[column.name]}
+                  </td>
+                ))}
             </tr>
           ))}
         </tbody>
