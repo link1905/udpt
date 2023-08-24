@@ -12,6 +12,7 @@ export interface AccountFields {
   first_name: string;
   last_name: string;
   username: string;
+  is_staff: boolean;
 }
 export interface CreateAccountRequestBody {
   username: string;
