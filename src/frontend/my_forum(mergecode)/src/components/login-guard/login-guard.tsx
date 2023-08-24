@@ -12,7 +12,7 @@ export function LoginGuard({ children }: PropsWithChildren<{}>) {
     requestAuthRefresh,
     {
       retry: 0,
-    },
+    }
   );
 
   const isAdminPage = useMatch({

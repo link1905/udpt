@@ -11,6 +11,7 @@ export interface CategoryFields {
 export interface ThreadFields {
   title: string;
   content: string;
+  category: CategoryFields;
   creator_id: number;
   creator_name: string;
   creator_email: string;
@@ -31,8 +32,8 @@ export interface CreateThreadForm {
   parent?: number;
 }
 export interface CreateThreadVoteData {
-  thread: number
-  is_upvote: boolean
+  thread: number;
+  is_upvote: boolean;
 }
 
 export interface UpdateThread {
@@ -47,7 +48,7 @@ export interface TaggedThreadFields {
 }
 
 export interface ThreadVoteFields {
-  thread: number
-  is_upvote: boolean
-  user_id: number
+  thread: number;
+  is_upvote: boolean;
+  user_id: number;
 }

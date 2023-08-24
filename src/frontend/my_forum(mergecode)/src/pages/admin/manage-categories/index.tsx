@@ -56,6 +56,7 @@ const ManageCategories = () => {
   };
 
   const columns = [
+    { name: "pk", title: "ID" },
     { name: "name", title: "Name" },
     {
       name: "created",
@@ -135,6 +136,8 @@ const ManageCategories = () => {
                 >
                   {column.render
                     ? column.render(category)
+                    : column.name === "pk" // Render pk explicitly
+                    ? category.pk
                     : category.fields[column.name]}
                 </td>
               ))}

@@ -10,14 +10,17 @@ import { ThreadFields } from "../services/forum/forum.client";
 import { requestGetLatestThreads } from "../services/forum/get-all-thread";
 import { Pagination } from "@mantine/core";
 import { requestGetThreadTags } from "../services/forum/get-thread-tags";
-
+import { requestGetCategory } from "../services/forum/get-category";
 export function HomePage() {
   const [value, setValue] = useState<string>("all");
   const [tagsOptions, setTagsOptions] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [allThreads, setAllThreads] = useState<ThreadFields[]>([]);
   const [latestThreads, setLatestThreads] = useState<ThreadFields[]>([]);
-  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [allCategories, setAllCategories] = useState<
+    { value: number; label: string }[]
+  >([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [approvedThreads, setApprovedThreads] = useState<{
@@ -25,7 +28,7 @@ export function HomePage() {
   }>({});
   const pageSize = 3;
   const [threadTags, setThreadTags] = useState<{ [key: number]: string[] }>({});
-
+  const [filteredThreads, setFilteredThreads] = useState<ThreadFields[]>([]);
   async function fetchThreadTags(threadId) {
     try {
       const tagsData = await requestGetThreadTags(threadId);
@@ -48,9 +51,10 @@ export function HomePage() {
 
     requestGetAllCategories()
       .then((response) => {
-        const categoryOptions = response.results.map(
-          (category) => category.fields.name
-        );
+        const categoryOptions = response.results.map((category) => ({
+          value: category.pk,
+          label: `${category.fields.name} (có ID là ${category.pk})`,
+        }));
         setAllCategories(categoryOptions);
       })
       .catch((error) => {
@@ -62,14 +66,48 @@ export function HomePage() {
         .then(async (response) => {
           const totalCount = response.count;
           const threads = response.results.map((threadModel) => {
-            const thread = threadModel; // Sửa đổi ở đây
+            const thread = threadModel;
             thread.path = `/question/${threadModel.pk}`;
             return thread;
           });
 
+          const filtered = threads.filter((thread) => {
+            if (selectedCategory && thread.category === selectedCategory) {
+              if (selectedTags.length === 0) return true; // No tags selected
+              return selectedTags.every(
+                (tag) => threadTags[thread.pk]?.includes(tag)
+              );
+            } else if (selectedTags.length > 0) {
+              return selectedTags.every(
+                (tag) => threadTags[thread.pk]?.includes(tag)
+              );
+            }
+            return true;
+          });
+
+          setFilteredThreads(filtered);
+          setTotalPages(Math.ceil(filtered.length / pageSize));
           setAllThreads(threads);
           setTotalPages(Math.ceil(totalCount / pageSize));
-
+          Promise.all(
+            threads.map(async (thread) => {
+              const categoryResponse = await requestGetCategory(thread.pk);
+              const categoryName =
+                categoryResponse.results[0]?.fields.name || "";
+              const updatedThread = { ...thread, categoryName };
+              return updatedThread;
+            })
+          )
+            .then((updatedThreads) => {
+              const threadTagsMap = {};
+              updatedThreads.forEach((thread) => {
+                threadTagsMap[thread.pk] = thread.tags;
+              });
+              setThreadTags(threadTagsMap);
+            })
+            .catch((error) => {
+              console.error("Error fetching thread tags:", error);
+            });
           Promise.all(threads.map((thread) => fetchThreadTags(thread.pk)))
             .then((tagsArray) => {
               const threadTagsMap = {};
@@ -114,24 +152,26 @@ export function HomePage() {
   const handleTabChange = (newValue: string) => {
     setValue(newValue);
   };
+  const handleFilterButtonClick = () => {
+    let filteredThreads = allThreads;
+
+    if (selectedCategory !== null) {
+      filteredThreads = filteredThreads.filter(
+        (thread) => thread.fields.category === selectedCategory
+      );
+    }
+
+    if (selectedTags.length > 0) {
+      filteredThreads = filteredThreads.filter((thread) =>
+        selectedTags.every((tag) => threadTags[thread.pk]?.includes(tag))
+      );
+    }
+
+    setFilteredThreads(filteredThreads);
+  };
+
   return (
     <>
-      {/* <Box>
-        <List>
-          <List.Item>
-            <NavLink to="/question">Question list</NavLink>
-          </List.Item>
-          <List.Item> */}
-      <NavLink to="/question/id">Question detail</NavLink>
-      <br></br>
-      <NavLink to="/signin">SIGN IN</NavLink>
-      {/* </List.Item>
-          <List.Item>
-            <NavLink to="/question/create">Create question</NavLink>
-          </List.Item>
-        </List>
-      </Box> */}
-
       <div className="mt-[20px] ">
         <Title color="blue.5" className="text-center mb-6 text-[50px]">
           Distributed Application Community
@@ -154,6 +194,8 @@ export function HomePage() {
               clearable
               size="sm"
               className="w-[35%]"
+              value={selectedCategory}
+              onChange={(value) => setSelectedCategory(value)}
             />
             <MultiSelect
               data={tagsOptions}
@@ -165,7 +207,10 @@ export function HomePage() {
               size="sm"
               className="ml-[-10px] w-[35%]"
             />
-            <button className="self-center bg-[#f44b3c] rounded-[7px] p-3 px-4 text-white font-bold hover:opacity-50">
+            <button
+              className="self-center bg-[#f44b3c] rounded-[7px] p-3 px-4 text-white font-bold hover:opacity-50 "
+              onClick={handleFilterButtonClick}
+            >
               Enter
             </button>
             <NavLink
@@ -199,7 +244,7 @@ export function HomePage() {
             {value === "all" && (
               <Tabs.Panel value="all" pt="xs" className="">
                 <div className="flex mt-5 flex-wrap w-[100%] ml-[30px] ">
-                  {allThreads
+                  {filteredThreads
                     .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                     .map((thread) => (
                       <NavLink
@@ -229,7 +274,9 @@ export function HomePage() {
                               Đợi duyệt
                             </Text>
                           )}
-
+                          <Text className="text-gray-600">
+                            Category: {thread.fields.category}
+                          </Text>
                           <div className="flex flex-wrap  ml-[-5px]">
                             {threadTags[thread.pk]?.map((tagName) => (
                               <Badge key={tagName} className="mr-1">
