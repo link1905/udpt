@@ -77,7 +77,7 @@ def user_self_filterer(ctx: Context, _: Optional[Iterable[Any]]) -> Iterable[Any
     meta["count"] = 1
     ctx[META_CONTEXT_KEY] = meta
 
-    return [ctx[USER_CONTEXT_KEY]]
+    return User.objects.filter(pk=ctx[USER_CONTEXT_KEY].pk)
 
 
 def auth_refresh_service(ctx: Context) -> HttpResponse:
@@ -130,21 +130,12 @@ user_list_create_view = context_view()(
         method_layer(
             "GET",
             is_authenticated_layer(),
-            case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
-                service=list_service(
-                    model_list_serializer(fields=USER_EXPOSED_FIELDS),
-                    model_all_filterer(User),
-                    model_set_meta_count_filterer(),
-                    limit_offset_filterer(),
-                ),
-            ),  # staffs
             service=list_service(
                 model_list_serializer(fields=USER_EXPOSED_FIELDS),
-                user_self_filterer,
+                model_all_filterer(User),
+                model_set_meta_count_filterer(),
                 limit_offset_filterer(),
-            ),  # normal users
+            ),
         ),
         case_layer(
             lambda ctx: ctx[USER_CONTEXT_KEY].is_authenticated
@@ -169,19 +160,11 @@ user_detail_update_delete_view = context_view()(
         is_authenticated_layer(),
         method_layer(
             "GET",
-            case_layer(
-                lambda ctx: ctx[USER_CONTEXT_KEY].is_staff
-                or ctx[USER_CONTEXT_KEY].is_superuser,
-                service=detail_service(
-                    model_serializer(fields=USER_EXPOSED_FIELDS),
-                    model_all_filterer(User),
-                    model_pk_filterer(),
-                ),
-            ),  # staffs
             service=detail_service(
                 model_serializer(fields=USER_EXPOSED_FIELDS),
-                user_self_filterer,
-            ),  # normal users
+                model_all_filterer(User),
+                model_pk_filterer(),
+            ),
         ),
         method_layer(
             "PUT",
@@ -199,6 +182,7 @@ user_detail_update_delete_view = context_view()(
                 model_mutator(UserChangeForm),
                 model_serializer(fields=USER_EXPOSED_FIELDS),
                 user_self_filterer,
+                model_pk_filterer(),
             ),  # normal users
         ),
         case_layer(
@@ -213,6 +197,7 @@ user_detail_update_delete_view = context_view()(
         service=delete_service(
             model_delete_mutator,
             user_self_filterer,
+            model_pk_filterer(),
         ),
     )
 )
