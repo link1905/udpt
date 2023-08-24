@@ -5,7 +5,6 @@ import {
   Badge,
   Box,
   Button,
-  Divider,
   Group,
   LoadingOverlay,
   Paper,
@@ -26,10 +25,8 @@ import {
 } from "../../services/forum/get-thread-tags.ts";
 import { AnswerForm } from "../../components/answer-form";
 import { ThreadAnswers } from "../../components/thread-answers/thread-answers.tsx";
-import { ThreadComments } from "../../components/thread-comments";
-
-
-const items = [1];
+import { ThreadVotes } from "../../components/thread-votes/thread-votes.tsx";
+import { UserAvatar } from "../../components/user-avatar/user-avatar.tsx";
 
 export function ViewQuestionPage() {
   const { id } = useParams<"id">();
@@ -43,7 +40,7 @@ export function ViewQuestionPage() {
   const { data: tagsData } = useQuery(threadTagsQueryKey, () =>
     requestGetThreadTags(id || ""),
   );
-  
+
   return (
     <Box>
       <LoadingOverlay visible={isLoading} />
@@ -60,25 +57,10 @@ export function ViewQuestionPage() {
       </Group>
       <Paper withBorder p="xl" mb="xl">
         <Group align="start">
-          <Box>
-            <Stack align="center">
-              <ActionIcon color="blue" size="lg" radius="xl" variant="outline">
-                <IconThumbUp size="1.625rem" />
-              </ActionIcon>
-              <Text fz="lg" fw={600}>
-                99
-              </Text>
-              <ActionIcon size="lg" radius="xl" variant="outline">
-                <IconThumbDown size="1.625rem" />
-              </ActionIcon>
-            </Stack>
-          </Box>
+          <Box>{id && <ThreadVotes id={id} />}</Box>
           <Box sx={{ flex: 1 }}>
             <Stack align="start">
-              <Group>
-                <Avatar src={demoAvatarImage} color="blue" radius="sm" />
-                {data?.fields?.creator_name || data?.fields?.creator_email}
-              </Group>
+              {data?.fields?.creator_id && <UserAvatar id={data?.fields?.creator_id} />}
               <Box>
                 {data?.fields?.content && (
                   <div
@@ -86,7 +68,7 @@ export function ViewQuestionPage() {
                       __html: data.fields.content,
                     }}
                   />
-                  )}
+                )}
               </Box>
               <Group spacing="sm">
                 {tagsData &&
@@ -102,8 +84,6 @@ export function ViewQuestionPage() {
                 <Button>Report</Button>
               </Group>
             </Stack>
-            <Divider my="md" />
-            {id && <ThreadComments id={id} />}
           </Box>
         </Group>
       </Paper>

@@ -7,7 +7,8 @@ export interface CategoryFields {
   name: string;
   created: string;
 }
-interface ThreadFieldsData {
+
+export interface ThreadFields {
   title: string;
   content: string;
   creator_id: number;
@@ -23,22 +24,17 @@ interface ThreadFieldsData {
   thread: number;
 }
 
-export interface ThreadFields {
-  pk: number;
-
-  creator_email: string;
-  creator_name: string;
-  created: string;
-  path: string;
-  fields: ThreadFieldsData;
-}
-
 export interface CreateThreadForm {
   title: string;
   content: string;
   category?: number;
   parent?: number;
 }
+export interface CreateThreadVoteData {
+  thread: number
+  is_upvote: boolean
+}
+
 export interface UpdateThread {
   title: string;
   content: string;
@@ -48,4 +44,10 @@ export interface TaggedThreadFields {
   tag_id: number;
   tag_name: string;
   thread_id: number;
+}
+
+export interface ThreadVoteFields {
+  thread: number
+  is_upvote: boolean
+  user_id: number
 }

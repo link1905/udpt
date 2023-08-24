@@ -1,11 +1,11 @@
-import { Avatar, Box, Group, Stack, Text } from "@mantine/core";
-import demoAvatarImage from "../../assets/avata.jpeg";
+import { Box, Stack, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import {
   getAllThreadsQueryKey,
   requestGetAllThreads,
-} from "../../services/forum/get-all-thread.ts";
+} from "../../services/forum/get-all-threads.ts";
 import { AnswerForm } from "../answer-form";
+import { UserAvatar } from "../user-avatar/user-avatar.tsx";
 
 export function ThreadComments({ id }: { id: string | number }) {
   const { data } = useQuery(getAllThreadsQueryKey(id), () =>
@@ -16,7 +16,7 @@ export function ThreadComments({ id }: { id: string | number }) {
       {data &&
         data.results.map((threadModel) => (
           <Stack key={threadModel.pk}>
-            <Avatar src={demoAvatarImage} color="blue" radius="sm" size="sm" />
+            <UserAvatar id={threadModel?.fields?.creator_id} />
             <Text>Commented at {threadModel?.fields?.created}</Text>
             <Box>
               {threadModel?.fields?.content && (

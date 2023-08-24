@@ -45,11 +45,11 @@ export function AccountPage() {
   });
   const [updateError, setUpdateError] = useState<{
     email: boolean;
-    oldPassword:boolean;
+    oldPassword: boolean;
     newPassword: boolean;
   }>({
     email: false,
-    oldPassword:false,
+    oldPassword: false,
     newPassword: false,
   });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +64,7 @@ export function AccountPage() {
     requestAuthRefresh,
     {
       retry: 0,
-    }
+    },
   );
   const form = useForm<AccountFormData>({
     initialValues: {
@@ -139,7 +139,8 @@ export function AccountPage() {
               }}
             />
             <Avatar
-              src={data?.fields?.avatar}
+              src={`${import.meta.env.VITE_API_URL}account/media/${data?.fields
+                ?.avatar}`}
               sx={{ width: 200, height: 200 }}
               onClick={() => inputRef.current?.click()}
             />
