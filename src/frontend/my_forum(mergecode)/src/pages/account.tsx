@@ -43,15 +43,7 @@ export function AccountPage() {
     email: false,
     newPassword: false,
   });
-  const [updateError, setUpdateError] = useState<{
-    email: boolean;
-    oldPassword: boolean;
-    newPassword: boolean;
-  }>({
-    email: false,
-    oldPassword: false,
-    newPassword: false,
-  });
+
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { mutate, isLoading: isUpdating } = useMutation(requestUpdateAccount, {
@@ -64,7 +56,7 @@ export function AccountPage() {
     requestAuthRefresh,
     {
       retry: 0,
-    },
+    }
   );
   const form = useForm<AccountFormData>({
     initialValues: {

@@ -24,6 +24,7 @@ export function Header() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("threads");
+    
 
     navigate("/signin");
   };

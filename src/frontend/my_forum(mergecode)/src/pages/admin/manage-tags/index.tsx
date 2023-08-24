@@ -13,6 +13,7 @@ import {
   Text,
 } from "@mantine/core";
 import { requestCreateTag } from "../../../services/tag/create-tag";
+import { requestDeleteTaggedThread } from "../../../services/forum/delete-tagged-thread";
 const ManageTags = () => {
   const [tags, setTags] = useState<Model<TagFields>[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -31,7 +32,7 @@ const ManageTags = () => {
   }, []);
 
   const handleDeleteTag = (pk: number) => {
-    requestDeleteTag(pk)
+    requestDeleteTaggedThread(pk)
       .then(() => {
         const updatedTags = tags.filter((tag) => tag.pk !== pk);
         setTags(updatedTags);
@@ -98,7 +99,7 @@ const ManageTags = () => {
         opened={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       >
-        <Paper padding="lg" >
+        <Paper padding="lg">
           <Input
             placeholder="Tag Name"
             value={newTagName}

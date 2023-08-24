@@ -12,6 +12,9 @@ const Dropdown = ({ isStaff }) => {
   const handleManageTags = () => {
     navigate("/admin/manage-tags");
   };
+  const handleManageAccounts = () => {
+    navigate("/admin/manage-accounts");
+  };
   return (
     <Menu shadow="md" width={200}>
       <Menu.Target>
@@ -24,6 +27,7 @@ const Dropdown = ({ isStaff }) => {
           <Menu.Item onClick={handleManageThreads}>Manage Threads</Menu.Item>
           <Menu.Item onClick={handleManageCategories}>Manage Categories</Menu.Item>
           <Menu.Item onClick={handleManageTags}>Manage tags</Menu.Item>
+          <Menu.Item onClick={handleManageAccounts}>Manage accounts</Menu.Item>
         </Menu.Dropdown>
       )}
     </Menu>

@@ -12,6 +12,7 @@ import { AccountPage } from "./account.tsx";
 import ManageThreads from "./admin/manage-threads/index.tsx";
 import ManageCategories from "./admin/manage-categories/index.tsx";
 import ManageTags from "./admin/manage-tags/index.tsx";
+import MangageAccounts from "./admin/manage-accounts/index.tsx";
 const NotFoundPage = () => {
   return <div>404 - Page Not Found</div>;
 };
@@ -55,6 +56,10 @@ export const router = createBrowserRouter([
       {
         path: "/admin/manage-tags",
         element: <ManageTags/>,
+      },
+       {
+        path: "/admin/manage-accounts",
+        element: <MangageAccounts/>,
       },
     ],
   },

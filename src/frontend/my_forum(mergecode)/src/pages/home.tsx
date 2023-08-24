@@ -1,4 +1,4 @@
-import { Card, Text } from "@mantine/core";
+import { Card, Text, Badge } from "@mantine/core";
 import { NavLink } from "react-router-dom";
 import { Paper, Title, MultiSelect, Select } from "@mantine/core";
 import { Tabs } from "@mantine/core";
@@ -9,6 +9,8 @@ import { requestGetAllThreads } from "../services/forum/get-all-thread";
 import { ThreadFields } from "../services/forum/forum.client";
 import { requestGetLatestThreads } from "../services/forum/get-all-thread";
 import { Pagination } from "@mantine/core";
+import { requestGetThreadTags } from "../services/forum/get-thread-tags";
+
 export function HomePage() {
   const [value, setValue] = useState<string>("all");
   const [tagsOptions, setTagsOptions] = useState<string[]>([]);
@@ -22,6 +24,17 @@ export function HomePage() {
     [key: number]: boolean;
   }>({});
   const pageSize = 3;
+  const [threadTags, setThreadTags] = useState<{ [key: number]: string[] }>({});
+
+  async function fetchThreadTags(threadId) {
+    try {
+      const tagsData = await requestGetThreadTags(threadId);
+      return tagsData.results.map((tagData) => tagData.fields.tag_name);
+    } catch (error) {
+      console.error("Error fetching thread tags:", error);
+      return [];
+    }
+  }
 
   useEffect(() => {
     requestGetAllTags()
@@ -46,7 +59,7 @@ export function HomePage() {
 
     if (value === "all") {
       requestGetAllThreads()
-        .then((response) => {
+        .then(async (response) => {
           const totalCount = response.count;
           const threads = response.results.map((threadModel) => {
             const thread = threadModel; // Sửa đổi ở đây
@@ -56,6 +69,18 @@ export function HomePage() {
 
           setAllThreads(threads);
           setTotalPages(Math.ceil(totalCount / pageSize));
+
+          Promise.all(threads.map((thread) => fetchThreadTags(thread.pk)))
+            .then((tagsArray) => {
+              const threadTagsMap = {};
+              tagsArray.forEach((tags, index) => {
+                threadTagsMap[threads[index].pk] = tags;
+              });
+              setThreadTags(threadTagsMap);
+            })
+            .catch((error) => {
+              console.error("Error fetching thread tags:", error);
+            });
         })
         .catch((error) => {
           console.error("Error fetching threads:", error);
@@ -192,7 +217,7 @@ export function HomePage() {
                           component="a"
                           target="_blank"
                         >
-                           {approvedThreads[thread.pk] ? (
+                          {approvedThreads[thread.pk] ? (
                             <Text
                               className="text-[14px] font-bold"
                               color="green"
@@ -204,6 +229,15 @@ export function HomePage() {
                               Đợi duyệt
                             </Text>
                           )}
+
+                          <div className="flex flex-wrap  ml-[-5px]">
+                            {threadTags[thread.pk]?.map((tagName) => (
+                              <Badge key={tagName} className="mr-1">
+                                {tagName}
+                              </Badge>
+                            ))}
+                          </div>
+
                           <Text weight={500} size="lg">
                             {thread.fields.title}
                           </Text>
@@ -213,8 +247,6 @@ export function HomePage() {
                               __html: thread.fields.content,
                             }}
                           />
-
-                         
                         </Card>
                       </NavLink>
                     ))}

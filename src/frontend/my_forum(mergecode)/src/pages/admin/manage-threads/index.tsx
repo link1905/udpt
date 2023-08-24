@@ -62,7 +62,10 @@ const ManageThreads = () => {
             ...prevApprovedThreads,
             [pk]: true, // Update the approved status in the local state
           }));
-          localStorage.setItem("approvedThreads", JSON.stringify({ ...approvedThreads, [pk]: true }));
+          localStorage.setItem(
+            "approvedThreads",
+            JSON.stringify({ ...approvedThreads, [pk]: true })
+          );
         })
         .catch((error) => {
           console.error("Error updating thread:", error);
