@@ -1,15 +1,19 @@
-import { Table, Text, Button } from "@mantine/core";
+import { Table, Text, Button, Pagination } from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { requestGetAllThreads } from "../../../services/forum/get-all-thread";
 import { requestDeleteThread } from "../../../services/forum/delete-thread";
 import { requestUpdateThread } from "../../../services/forum/update-thread";
 import { ThreadFields } from "../../../services/forum/forum.client";
 import { Model } from "../../../services/client";
+import { IconAt, IconTrash } from "@tabler/icons-react";
+
 const ManageThreads = () => {
   const [threads, setThreads] = useState<Model<ThreadFields>[]>([]);
   const [approvedThreads, setApprovedThreads] = useState<{
     [key: number]: boolean;
   }>({});
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 3;
 
   useEffect(() => {
     requestGetAllThreads()
@@ -87,7 +91,7 @@ const ManageThreads = () => {
             onClick={() => handleEditStatus(rowData.pk)}
             disabled={approvedThreads[rowData.pk]}
           >
-            Edit
+            <IconAt/> Edit
           </Button>
         </div>
       ),
@@ -102,70 +106,81 @@ const ManageThreads = () => {
           color="red"
           onClick={() => handleDeleteThread(rowData.pk)}
         >
-          Delete
+            <IconTrash /> Delete
         </Button>
       ),
     },
   ];
-
+  const totalThreads = threads.length;
+  const totalPages = Math.ceil(totalThreads / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const visibleThreads = threads.slice(startIndex, startIndex + pageSize);
   return (
-    <Table
-      striped
-      highlightOnHover
-      withBorder
-      withColumnBorders
-      horizontalSpacing="xl"
-      verticalSpacing="lg"
-    >
-      <thead>
-        <tr>
-          {columns.map((column) => (
-            <th
-              key={column.name}
-              style={{
-                textAlign: "center",
-                color: "black",
-                fontWeight: "bold",
-              }}
-            >
-              {column.title || column.name}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {threads.map((thread) => (
-          <tr key={thread.pk}>
+    <>
+      <Table
+        striped
+        highlightOnHover
+        withBorder
+        withColumnBorders
+        horizontalSpacing="xl"
+        verticalSpacing="lg"
+      >
+        <thead>
+          <tr>
             {columns.map((column) => (
-              <td
+              <th
                 key={column.name}
-                className={`px-4 py-2 ${
-                  column.name === "pk" ||
-                  column.title === "Status" ||
-                  column.title === "Delete"
-                    ? "text-center"
-                    : ""
-                }`}
+                style={{
+                  textAlign: "center",
+                  color: "black",
+                  fontWeight: "bold",
+                }}
               >
-                {column.name === "title" ? (
-                  thread.fields[column.name]
-                ) : column.name === "content" ? (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: thread.fields[column.name],
-                    }}
-                  />
-                ) : column.render ? (
-                  column.render(thread)
-                ) : (
-                  thread[column.name]
-                )}
-              </td>
+                {column.title || column.name}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </Table>
+        </thead>
+        <tbody>
+          {visibleThreads.map((thread) => (
+            <tr key={thread.pk}>
+              {columns.map((column) => (
+                <td
+                  key={column.name}
+                  className={`px-4 py-2 ${
+                    column.name === "pk" ||
+                    column.title === "Status" ||
+                    column.title === "Delete"
+                      ? "text-center"
+                      : ""
+                  }`}
+                >
+                  {column.name === "title" ? (
+                    thread.fields[column.name]
+                  ) : column.name === "content" ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: thread.fields[column.name],
+                      }}
+                    />
+                  ) : column.render ? (
+                    column.render(thread)
+                  ) : (
+                    thread[column.name]
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+      <Pagination
+        className="justify-center mt-[40px]"
+        total={totalPages}
+        value={currentPage}
+        onChange={setCurrentPage}
+      />
+    </>
   );
 };
 

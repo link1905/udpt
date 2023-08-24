@@ -11,7 +11,8 @@ import { Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import logo from '../../assets/logo.png'
+import logo from "../../assets/logo.png";
+import Dropdown from "../dropdown-admin/DropDown";
 export function Header() {
   const navigate = useNavigate();
   const [opened, { toggle }] = useDisclosure(false);
@@ -19,25 +20,28 @@ export function Header() {
   const loggedInUser = JSON.parse(loggedInUserJSON);
 
   const loggedInUsername = loggedInUser ? loggedInUser.fields.username : null;
-
+  const isStaff = loggedInUser ? loggedInUser.fields.is_staff : false;
   const handleLogout = () => {
-
     localStorage.removeItem("user");
-    localStorage.removeItem("threads")
-   
-    navigate("/signin"); 
+    localStorage.removeItem("threads");
+
+    navigate("/signin");
   };
-  const handleHomePage = () =>{
+  const handleHomePage = () => {
     navigate("/");
-  }
+  };
 
   return (
     <MantineHeader height={56} mb={120}>
       <Container size="xl" p="xs">
         <Group>
           <Group onClick={handleHomePage}>
-            <Burger opened={opened} onClick={toggle} size="sm"  />
-            <img className="w-[90px] h-[55px] mt-[-10px] cursor-pointer" src={logo} alt="Logo" />
+            <Burger opened={opened} onClick={toggle} size="sm" />
+            <img
+              className="w-[90px] h-[55px] mt-[-10px] cursor-pointer"
+              src={logo}
+              alt="Logo"
+            />
           </Group>
           <Group sx={{ flexGrow: 1, justifyContent: "center" }} align="center">
             <Autocomplete
@@ -59,12 +63,15 @@ export function Header() {
             {loggedInUsername ? (
               <div className="flex items-center">
                 <Avatar
-                className="cursor-pointer"
+                  className="cursor-pointer"
                   color="cyan"
                   radius="xl"
                   onClick={() => navigate("/account")}
                 ></Avatar>
                 <p className="ml-2">{loggedInUsername}</p>
+                {isStaff && ( 
+                  <Dropdown isStaff={isStaff} /> 
+                )}
                 <Button
                   onClick={handleLogout}
                   className="ml-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
@@ -81,4 +88,3 @@ export function Header() {
     </MantineHeader>
   );
 }
-
