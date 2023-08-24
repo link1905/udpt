@@ -12,7 +12,7 @@ class TestUserAPI(AuthenticatedTestCase):
 
         response = self.user_client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()["results"]), 1)
+        self.assertEqual(len(response.json()["results"]), 2)
         self.assertEqual(response.json()["results"][0]["pk"], self.user.pk)
 
         response = self.staff_client.get(url)
