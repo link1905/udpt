@@ -1,6 +1,10 @@
 from typing import Any, Iterable, Optional, Tuple
 
-from account.services import authentication_layer, is_authenticated_layer, is_staff_layer
+from account.services import (
+    authentication_layer,
+    is_authenticated_layer,
+    is_staff_layer,
+)
 from django.db import models
 from django.http.request import QueryDict
 from django.views.decorators.http import require_http_methods
@@ -31,8 +35,19 @@ from djview.views import (
     into_service,
     method_layer,
 )
-from forum.filters import TaggedThreadFilterSet, ThreadCategoryFilterSet, ThreadFilterSet, ThreadVoteFilterSet
-from forum.forms import TaggedThreadForm, ThreadCategoryForm, ThreadForm, ThreadStaffForm, ThreadVoteForm
+from forum.filters import (
+    TaggedThreadFilterSet,
+    ThreadCategoryFilterSet,
+    ThreadFilterSet,
+    ThreadVoteFilterSet,
+)
+from forum.forms import (
+    TaggedThreadForm,
+    ThreadCategoryForm,
+    ThreadForm,
+    ThreadStaffForm,
+    ThreadVoteForm,
+)
 from forum.models import TaggedThread, Thread, ThreadCategory, ThreadVote
 
 USER_CONTEXT_KEY = "__user__"
@@ -602,5 +617,3 @@ thread_category_detail_update_delete_view = context_view()(
         ),
     )
 )
-
-

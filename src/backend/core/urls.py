@@ -28,3 +28,8 @@ if settings.USE_FORUM_APP:
     urlpatterns += [
         path("api/", include("forum.urls")),
     ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path("__debug__/", include("debug_toolbar.urls")),
+    ]

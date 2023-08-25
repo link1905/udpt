@@ -28,6 +28,9 @@ class JWTBackend(ModelBackend):
 
         token: Optional[str] = request.META.get("HTTP_AUTHORIZATION", None)
         if not token:
+            token = request.GET.get("JWT", None)
+
+        if not token:
             return None
 
         if token.startswith(self.keyword):

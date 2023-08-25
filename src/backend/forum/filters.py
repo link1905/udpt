@@ -1,6 +1,6 @@
 import django_filters
 from django.db import models
-from forum.models import TaggedThread, Thread, ThreadQuerySet, ThreadCategory
+from forum.models import TaggedThread, Thread, ThreadCategory, ThreadQuerySet
 
 
 class CharInFilter(django_filters.BaseInFilter, django_filters.CharFilter):
@@ -64,7 +64,9 @@ class ThreadFilterSet(django_filters.FilterSet):
 
         return queryset
 
-    def filter_category(self, queryset: ThreadQuerySet, _: str, value: int) -> ThreadQuerySet:
+    def filter_category(
+        self, queryset: ThreadQuerySet, _: str, value: int
+    ) -> ThreadQuerySet:
         return queryset.category(value)
 
     class Meta:
@@ -111,11 +113,10 @@ class TaggedThreadFilterSet(django_filters.FilterSet):
             "thread",
         )
 
+
 class ThreadCategoryFilterSet(django_filters.FilterSet):
     search = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
 
     class Meta:
         model = ThreadCategory
-        fields = (
-            "search",
-        )
+        fields = ("search",)

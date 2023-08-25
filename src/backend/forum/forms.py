@@ -1,4 +1,3 @@
-from typing import Optional
 from django import forms
 from django.core.exceptions import ValidationError
 from forum.models import TaggedThread, Thread, ThreadCategory, ThreadVote
@@ -39,10 +38,13 @@ class ThreadForm(forms.ModelForm):
             self.cleaned_data["parent"] is not None
             and self.cleaned_data["category"] is not None
         ):
-            self.add_error("category", ValidationError(
-                "category cannot be set on an answer or comment",
-                code="invalid",
-            ))
+            self.add_error(
+                "category",
+                ValidationError(
+                    "category cannot be set on an answer or comment",
+                    code="invalid",
+                ),
+            )
 
     def _clean_fields(self) -> None:
         self._pre_clean_creator_fields()
@@ -95,7 +97,6 @@ class ThreadStaffForm(ThreadForm):
             return
 
         self._post_clean_approved_fields()
-
 
     class Meta:
         model = Thread
@@ -168,7 +169,6 @@ class TaggedThreadForm(forms.ModelForm):
             self["tag_id"].field.disabled = True
             self["user_id"].field.disabled = True
 
-
     def _post_clean_creator_id(self) -> None:
         creator_id = self.cleaned_data["creator_id"]
 
@@ -177,7 +177,6 @@ class TaggedThreadForm(forms.ModelForm):
                 "creator_id",
                 ValidationError("user does not own thread", code="invalid"),
             )
-
 
     def _clean_fields(self) -> None:
         self._pre_clean_readonly_fields()

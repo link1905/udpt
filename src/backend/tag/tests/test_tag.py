@@ -30,7 +30,6 @@ class TestTagAPI(LiveServerAuthenticatedTestCase):
         self.assertEqual(response.status_code, 403)
 
         response = self.user_client.post(url, {"name": "testtag1"})
-        print(response.json())
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["fields"]["name"], "testtag1")
 

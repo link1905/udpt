@@ -11,7 +11,7 @@ User = get_user_model()
 class TestThreadAPI(LiveServerAuthenticatedTestCase):
     def setUp(self) -> None:
         super().setUp()
-        
+
         self.category = ThreadCategory.objects.create(name="testcategory")
         self.category2 = ThreadCategory.objects.create(name="testcategory2")
 

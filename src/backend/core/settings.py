@@ -53,6 +53,7 @@ ALLOWED_HOSTS = get_list(
 INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
+    "cacheops",
 ]
 
 if USE_ACCOUNT_APP:
@@ -71,6 +72,16 @@ if USE_TAG_APP:
 if USE_FORUM_APP:
     INSTALLED_APPS += ["forum"]
 
+if DEBUG:
+    import socket
+
+    INSTALLED_APPS += ["debug_toolbar"]
+
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + [
+        "127.0.0.1",
+        "10.0.2.2",
+    ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -78,6 +89,13 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE += [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+        "core.middlewares.NonHtmlDebugToolbarMiddleware",
+    ]
+
 
 ROOT_URLCONF = "core.urls"
 
@@ -148,11 +166,11 @@ USE_TZ = True
 
 STATIC_ROOT = BASE_DIR / "static"
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
-MEDIA_URL = "media/"
+MEDIA_URL = "/media/"
 
 STORAGES = {
     "default": {
