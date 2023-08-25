@@ -142,6 +142,16 @@ SPEC.components.schema(
                 "type": "string",
                 "example": "admin",
             },
+            "is_staff": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
+            },
+            "is_active": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
+            },
         },
         "required": ["username", "password1", "password2"],
     }
@@ -182,6 +192,16 @@ SPEC.components.schema(
                 "type": "string",
                 "format": "binary",
             },
+            "is_staff": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
+            },
+            "is_active": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
+            },
         },
         "required": ["username", "password1", "password2"],
     }
@@ -217,6 +237,16 @@ SPEC.components.schema(
             "last_name": {
                 "type": "string",
                 "example": "admin",
+            },
+            "is_staff": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
+            },
+            "is_active": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
             },
         },
         "required": ["username"],
@@ -257,6 +287,16 @@ SPEC.components.schema(
             "avatar": {
                 "type": "string",
                 "format": "binary",
+            },
+            "is_staff": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
+            },
+            "is_active": {
+                "type": "boolean",
+                "example": True,
+                "description": "Only superuser can set this field",
             },
         },
         "required": ["username"],
