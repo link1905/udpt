@@ -1,4 +1,12 @@
-import { Table, Text, Button, Pagination } from "@mantine/core";
+import {
+  Table,
+  Text,
+  Button,
+  Pagination,
+  Drawer,
+  TextInput,
+  Textarea,
+} from "@mantine/core";
 import React, { useEffect, useState } from "react";
 import { requestGetAllThreads } from "../../../services/forum/get-all-thread";
 import { requestDeleteThread } from "../../../services/forum/delete-thread";
@@ -14,6 +22,41 @@ const ManageThreads = () => {
   }>({});
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 3;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedThread, setSelectedThread] =
+    useState<Model<ThreadFields> | null>(null);
+  const handleTitleClick = (thread: Model<ThreadFields>) => {
+    setSelectedThread(thread);
+    setIsDrawerOpen(true);
+  };
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+  };
+
+  const handleUpdateThread = (updatedTitle: string, updatedContent: string) => {
+    if (selectedThread) {
+      const updatedData = {
+        ...selectedThread.fields,
+        title: updatedTitle,
+        content: updatedContent,
+      };
+
+      const updatedThreads = threads.map((thread) =>
+        thread.pk === selectedThread.pk
+          ? { ...thread, fields: updatedData }
+          : thread
+      );
+
+      requestUpdateThread(selectedThread.pk, updatedData)
+        .then(() => {
+          setThreads(updatedThreads);
+          handleCloseDrawer();
+        })
+        .catch((error) => {
+          console.error("Error updating thread:", error);
+        });
+    }
+  };
 
   useEffect(() => {
     requestGetAllThreads()
@@ -49,7 +92,7 @@ const ManageThreads = () => {
     if (threadToUpdate) {
       const updatedData = {
         ...threadToUpdate.fields,
-        approved: true, // Update the approved status
+        approved: true,
       };
 
       requestUpdateThread(pk, updatedData)
@@ -60,7 +103,7 @@ const ManageThreads = () => {
           setThreads(updatedThreads);
           setApprovedThreads((prevApprovedThreads) => ({
             ...prevApprovedThreads,
-            [pk]: true, // Update the approved status in the local state
+            [pk]: true,
           }));
           localStorage.setItem(
             "approvedThreads",
@@ -75,7 +118,20 @@ const ManageThreads = () => {
 
   const columns = [
     { name: "pk", align: "center", title: "ID" },
-    { name: "title", title: "Title of thread" },
+    {
+      name: "title",
+      title: "Title of thread",
+      render: (rowData: Model<ThreadFields>) => (
+        <a
+          href="#"
+          className="text-blue-700"
+          onClick={() => handleTitleClick(rowData)}
+        >
+          {rowData.fields.title}
+        </a>
+      ),
+    },
+
     { name: "content", title: "Content of thread" },
     {
       name: "approved",
@@ -128,6 +184,59 @@ const ManageThreads = () => {
   const visibleThreads = threads.slice(startIndex, startIndex + pageSize);
   return (
     <>
+      <Drawer
+        opened={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        title="Update Thread"
+        position="left"
+      >
+        {selectedThread && (
+          <div>
+            <TextInput
+              className=""
+              type="text"
+              placeholder="Your name"
+              label="Title"
+              description="*Title of thread "
+              size="md"
+              withAsterisk
+              value={selectedThread.fields.title}
+              onChange={(e) =>
+                setSelectedThread((prev) => ({
+                  ...prev,
+                  fields: { ...prev.fields, title: e.target.value },
+                }))
+              }
+            />
+            <Textarea
+              className="mt-[20px] "
+              label="Content"
+              description="*Content of thread "
+              size="md"
+              withAsterisk
+              value={selectedThread.fields.content}
+              onChange={(e) =>
+                setSelectedThread((prev) => ({
+                  ...prev,
+                  fields: { ...prev.fields, content: e.target.value },
+                }))
+              }
+            />
+            <Button
+              className="bg-blue-500 text-white border-blue-500 mt-[20px]"
+              onClick={() =>
+                handleUpdateThread(
+                  selectedThread.fields.title,
+                  selectedThread.fields.content
+                )
+              }
+            >
+              Update
+            </Button>
+          </div>
+        )}
+      </Drawer>
+
       <Table
         striped
         highlightOnHover
@@ -166,19 +275,62 @@ const ManageThreads = () => {
                       : ""
                   }`}
                 >
-                  {column.name === "title" ? (
-                    thread.fields[column.name]
-                  ) : column.name === "content" ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: thread.fields[column.name],
-                      }}
-                    />
-                  ) : column.render ? (
-                    column.render(thread)
-                  ) : (
-                    thread[column.name]
-                  )}
+                  {(() => {
+                    switch (column.name) {
+                      case "title":
+                        return (
+                          <a
+                            className="text-blue-500 cursor-pointer hover:text-red-500"
+                            onClick={() => handleTitleClick(thread)}
+                          >
+                            {thread.fields[column.name]}
+                          </a>
+                        );
+                      case "content":
+                        return (
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: thread.fields[column.name],
+                            }}
+                          />
+                        );
+                      case "approved":
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Text
+                              color={
+                                approvedThreads[thread.pk] ? "green" : "red"
+                              }
+                              style={{ marginRight: "8px" }}
+                            >
+                              {approvedThreads[thread.pk]
+                                ? "Approved"
+                                : "Not Approved"}
+                            </Text>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              color="blue"
+                              onClick={() => handleEditStatus(thread.pk)}
+                              disabled={approvedThreads[thread.pk]}
+                            >
+                              <IconAt /> Edit
+                            </Button>
+                          </div>
+                        );
+                      case "pk":
+                      default:
+                        return column.render
+                          ? column.render(thread)
+                          : thread[column.name];
+                    }
+                  })()}
                 </td>
               ))}
             </tr>

@@ -7,7 +7,8 @@ import { format } from "date-fns";
 import { requestDeleteAccount } from "../../../services/account/delete-account";
 import { Pagination } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
-
+import { Alert } from "@mantine/core";
+import { IconAlertCircle } from "@tabler/icons-react";
 const ManageAccounts = () => {
   const [accounts, setAccounts] = useState<Model<AccountFields>[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -18,6 +19,19 @@ const ManageAccounts = () => {
   const handleUsernameClick = (account: Model<AccountFields>) => {
     setSelectedAccount(account);
     setIsModalOpen(true);
+  };
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [accountToDelete, setAccountToDelete] =
+    useState<Model<AccountFields> | null>(null);
+  const handleOpenDeleteModal = (account: Model<AccountFields>) => {
+    setAccountToDelete(account);
+    setIsDeleteModalOpen(true);
+  };
+  const [showAlert, setShowAlert] = useState(false);
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setAccountToDelete(null);
   };
 
   useEffect(() => {
@@ -31,6 +45,18 @@ const ManageAccounts = () => {
   }, []);
 
   const handleDeleteAccount = (pk: number) => {
+    const accountToDelete = accounts.find((account) => account.pk === pk);
+
+    if (accountToDelete?.fields.is_staff) {
+      setShowAlert(true);
+  
+      
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2000);
+  
+      return;
+    }
     requestDeleteAccount(pk)
       .then(() => {
         const updatedAccounts = accounts.filter((account) => account.pk !== pk);
@@ -70,7 +96,7 @@ const ManageAccounts = () => {
           size="sm"
           variant="outline"
           color="red"
-          onClick={() => handleDeleteAccount(rowData.pk)}
+          onClick={() => handleOpenDeleteModal(rowData)}
         >
           <IconTrash /> Delete
         </Button>
@@ -85,6 +111,20 @@ const ManageAccounts = () => {
 
   return (
     <>
+      {showAlert && (
+        <Alert
+          className="w-[30%] m-auto"
+          icon={<IconAlertCircle size="1rem" />}
+          title="KHÔNG ĐƯỢC XÓA"
+          color="red"
+          radius="lg"
+          withCloseButton
+          variant="filled"
+        >
+          Bạn không có quyền xóa tài khoản ADMIN
+        </Alert>
+      )}
+
       {selectedAccount && (
         <Modal
           opened={isModalOpen}
@@ -117,6 +157,39 @@ const ManageAccounts = () => {
               onClick={() => setIsModalOpen(false)}
             >
               Close
+            </Button>
+          </div>
+        </Modal>
+      )}
+      {accountToDelete && (
+        <Modal
+          opened={isDeleteModalOpen}
+          onClose={handleCloseDeleteModal}
+          title="Confirm Delete"
+          size="sm"
+          overlayOpacity={0.6}
+        >
+          <Text size="lg" className="mb-4">
+            Are you sure you want to delete this account?
+          </Text>
+          <div className="flex justify-center space-x-3">
+            <Button
+              size="sm"
+              variant="outline"
+              color="red"
+              onClick={() => {
+                handleDeleteAccount(accountToDelete.pk);
+                handleCloseDeleteModal();
+              }}
+            >
+              Delete
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleCloseDeleteModal}
+              className="bg-blue-500 text-white border-blue-500"
+            >
+              Cancel
             </Button>
           </div>
         </Modal>

@@ -27,6 +27,6 @@ export async function requestSignUp({
       last_name,
     }
   );
-  localStorage.setItem(AUTH_LOCALSTORAGE_KEY, data.token);
+  
 }
   
