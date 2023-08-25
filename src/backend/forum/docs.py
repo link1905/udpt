@@ -67,6 +67,10 @@ THREAD_PROPERTIES = {
             "thread": {
                 "type": "integer",
                 "example": 1,
+            },
+            "category": {
+                "type": "integer",
+                "example": 1,
             }
         },
     }

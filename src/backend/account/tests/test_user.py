@@ -31,11 +31,28 @@ class TestUserAPI(AuthenticatedTestCase):
                 "password1": "TestPass123123",
                 "password2": "TestPass123123",
                 "is_active": True,
+                "is_staff": True,
             },
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["fields"]["username"], "testuser2")
         self.assertEqual(response.json()["fields"]["is_active"], True)
+        self.assertEqual(response.json()["fields"]["is_staff"], False)
+
+        response = self.staff_client.post(
+            url,
+            {
+                "username": "testuser3",
+                "password1": "TestPass123123",
+                "password2": "TestPass123123",
+                "is_active": True,
+                "is_staff": True,
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["fields"]["username"], "testuser3")
+        self.assertEqual(response.json()["fields"]["is_active"], True)
+        self.assertEqual(response.json()["fields"]["is_staff"], True)
 
     def test_detail_user(self):
         url = reverse("user-detail-update-delete", kwargs={"pk": self.user.pk})

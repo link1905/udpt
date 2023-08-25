@@ -40,6 +40,17 @@ class UserCreationForm(DjangoUserCreationForm):
 class StaffCreationForm(DjangoUserCreationForm):
     class Meta(DjangoUserCreationForm.Meta):
         model = User
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "avatar",
+            "password1",
+            "password2",
+            "is_staff",
+            "is_active",
+        )
 
 
 class UserChangeForm(DjangoUserChangeForm):
@@ -57,3 +68,12 @@ class UserChangeForm(DjangoUserChangeForm):
 class StaffChangeForm(DjangoUserChangeForm):
     class Meta(DjangoUserChangeForm.Meta):
         model = User
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "avatar",
+            "is_staff",
+            "is_active",
+        )
