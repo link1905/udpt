@@ -139,6 +139,7 @@ export function AccountPage() {
           </Group>
         </Grid.Col>
         <Grid.Col span={9}>
+          {/* <h2 className="text-red-500 font-bold">*Lưu ý: Tài khoản mới tạo thì phải update lại First name, Last name và Email !</h2> */}
           <form onSubmit={form.onSubmit(handleSubmit)}>
             <Stack>
               <TextInput

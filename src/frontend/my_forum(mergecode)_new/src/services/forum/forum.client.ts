@@ -11,7 +11,7 @@ export interface CategoryFields {
 export interface ThreadFields {
   title: string;
   content: string;
-  category: number
+  category: number;
   creator_id: number;
   creator_name: string;
   creator_email: string;
@@ -23,6 +23,9 @@ export interface ThreadFields {
   created: string;
   updated: string;
   thread: number;
+  voteCount: number;
+  pk: number;
+  path: string;
 }
 
 export interface CreateThreadForm {

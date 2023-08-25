@@ -9,5 +9,5 @@ export function ThreadCategory({ id }: { id: string | number }) {
   const { data } = useQuery(getCategoryQueryKey(id), () =>
     requestGetCategory(id),
   );
-  return <Badge>{data?.fields?.name}</Badge>;
+  return <Badge color="red" radius="lg" variant="filled" className="ml-[-5px] p-[13px]">{data?.fields?.name}</Badge>;
 }

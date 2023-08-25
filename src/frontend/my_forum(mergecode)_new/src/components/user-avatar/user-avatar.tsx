@@ -16,6 +16,7 @@ export function UserAvatar({ id }: { id: number }) {
           ?.avatar}`}
         color="blue"
         radius="sm"
+        className="rounded-[25px] cursor-pointer"
       />
       {`${data?.fields?.first_name} ${data?.fields?.last_name}`}
     </Group>

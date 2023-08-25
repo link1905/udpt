@@ -13,18 +13,19 @@ import { IconSearch } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import Dropdown from "../dropdown-admin/DropDown";
+import { UserAvatar } from "../user-avatar/user-avatar";
 export function Header() {
   const navigate = useNavigate();
   const [opened, { toggle }] = useDisclosure(false);
   const loggedInUserJSON = localStorage.getItem("user");
   const loggedInUser = JSON.parse(loggedInUserJSON);
-
+  const avatar = loggedInUser ? loggedInUser.fields.avatar : null;
   const loggedInUsername = loggedInUser ? loggedInUser.fields.username : null;
   const isStaff = loggedInUser ? loggedInUser.fields.is_staff : false;
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("threads");
-    
+    localStorage.removeItem("AUTH_LOCALSTORAGE")
 
     navigate("/signin");
   };
@@ -63,16 +64,29 @@ export function Header() {
           <Box>
             {loggedInUsername ? (
               <div className="flex items-center">
-                <Avatar
-                  className="cursor-pointer"
-                  color="cyan"
-                  radius="xl"
-                  onClick={() => navigate("/account")}
-                ></Avatar>
-                <p className="ml-2">{loggedInUsername}</p>
-                {isStaff && ( 
-                  <Dropdown isStaff={isStaff} /> 
+                
+                {!avatar && (
+                  <>
+                    <Avatar
+                      className="cursor-pointer"
+                      color="cyan"
+                      radius="xl"
+                      onClick={() => navigate("/account")}
+                    />
+                    <p className="ml-2">{loggedInUsername}</p>
+                  </>
                 )}
+                {avatar && (
+                  <div
+                    className="flex items-center"
+                    onClick={() => navigate("/account")}
+                  >
+                    <UserAvatar id={loggedInUser.pk} />
+                    
+                  </div>
+                )}
+
+                {isStaff && <Dropdown isStaff={isStaff} />}
                 <Button
                   onClick={handleLogout}
                   className="ml-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
@@ -81,7 +95,12 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <Button onClick={() => navigate("/signin")} className="bg-blue-500 text-white border-blue-500">Login</Button>
+              <Button
+                onClick={() => navigate("/signin")}
+                className="bg-blue-500 text-white border-blue-500"
+              >
+                Login
+              </Button>
             )}
           </Box>
         </Group>

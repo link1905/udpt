@@ -11,7 +11,10 @@ import {
   Stack,
   Text,
   Title,
+  Dialog,
+  TextInput,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconThumbUp, IconThumbDown } from "@tabler/icons-react";
 import demoAvatarImage from "../../assets/avata.jpeg";
 import { useQuery } from "@tanstack/react-query";
@@ -30,7 +33,7 @@ import { UserAvatar } from "../../components/user-avatar/user-avatar.tsx";
 import { ThreadCategory } from "../../components/thread-category/thread-category.tsx";
 import { format } from "date-fns";
 export function ViewQuestionPage() {
-  
+  const [opened, { toggle, close }] = useDisclosure(false);
 
   const { id } = useParams<"id">();
   const { data, isLoading } = useQuery(
@@ -43,12 +46,16 @@ export function ViewQuestionPage() {
   const { data: tagsData } = useQuery(threadTagsQueryKey, () =>
     requestGetThreadTags(id || "")
   );
-  const createdDate = data?.fields?.created ? new Date(data.fields.created) : null;
+  const createdDate = data?.fields?.created
+    ? new Date(data.fields.created)
+    : null;
 
   // Format the date as "year month date" if it's valid
   const formattedDate = createdDate
-    ? `${createdDate.getFullYear()} ${createdDate.toLocaleString('default', { month: 'long' })} ${createdDate.getDate()}`
-    : 'Invalid Date';
+    ? `${createdDate.getFullYear()} ${createdDate.toLocaleString("default", {
+        month: "long",
+      })} ${createdDate.getDate()}`
+    : "Invalid Date";
   return (
     <Box>
       <LoadingOverlay visible={isLoading} />
@@ -68,9 +75,23 @@ export function ViewQuestionPage() {
           <Box>{id && <ThreadVotes id={id} />}</Box>
           <Box sx={{ flex: 1 }}>
             <Stack align="start">
-              {data?.fields?.creator_id && (
-                <UserAvatar id={data?.fields?.creator_id} />
-              )}
+              <div className="flex items-center">
+                {data?.fields?.creator_id && (
+                  <UserAvatar id={data?.fields?.creator_id} />
+                )}
+                {data?.fields?.category && (
+                  <div className="ml-[30px] mt-[-4px]">
+                    <ThreadCategory id={data.fields.category} />
+                  </div>
+                )}
+              </div>
+
+              <Group spacing="sm">
+                {tagsData &&
+                  tagsData.results.map((tagModel) => (
+                    <Badge key={tagModel.pk}>{tagModel.fields.tag_name}</Badge>
+                  ))}
+              </Group>
               <Box>
                 {data?.fields?.content && (
                   <div
@@ -80,23 +101,48 @@ export function ViewQuestionPage() {
                   />
                 )}
               </Box>
-              {data?.fields?.category && (
-                <ThreadCategory id={data.fields.category} />
-              )}
-              <Group spacing="sm">
-                {tagsData &&
-                  tagsData.results.map((tagModel) => (
-                    <Badge key={tagModel.pk}>{tagModel.fields.tag_name}</Badge>
-                  ))}
-              </Group>
+
               <Group>
                 Approved by:{" "}
                 {data?.fields?.approver_name || data?.fields?.approver_email}
               </Group>
               <Group>
-                <Button className="bg-blue-500 text-white border-blue-500">
-                  Report
-                </Button>
+                <>
+                  <Group position="center">
+                    <Button
+                      className="bg-red-500 text-white border-blue-500"
+                      onClick={toggle}
+                    >
+                      REPORT
+                    </Button>
+                  </Group>
+
+                  <Dialog
+                    className="absolute z-99 mt-[-330px] ml-[-1150px]"
+                    opened={opened}
+                    withCloseButton
+                    onClose={close}
+                    size="xl"
+                    radius="md"
+                  >
+                    <Text size="sm" mb="xs" weight={500}>
+                      Report to admin
+                    </Text>
+
+                    <Group align="flex-end">
+                      <TextInput
+                        placeholder="Give we your report"
+                        sx={{ flex: 1 }}
+                      />
+                      <Button
+                        className="bg-blue-500 text-white border-blue-500"
+                        onClick={close}
+                      >
+                        Subscribe
+                      </Button>
+                    </Group>
+                  </Dialog>
+                </>
               </Group>
             </Stack>
           </Box>

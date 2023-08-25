@@ -12,6 +12,10 @@ import { Pagination } from "@mantine/core";
 import { requestGetThreadTags } from "../services/forum/get-thread-tags";
 import { requestGetCategory } from "../services/forum/get-category";
 import { format } from "date-fns";
+import {
+  requestGetThreadVotes,
+  getThreadVotesKey,
+} from "../services/forum/get-thread-votes";
 export function HomePage() {
   const [value, setValue] = useState<string>("all");
   const [tagsOptions, setTagsOptions] = useState<string[]>([]);
@@ -30,6 +34,8 @@ export function HomePage() {
   const pageSize = 9;
   const [threadTags, setThreadTags] = useState<{ [key: number]: string[] }>({});
   const [filteredThreads, setFilteredThreads] = useState<ThreadFields[]>([]);
+  const [mostVotedThreads, setMostVotedThreads] = useState<ThreadFields[]>([]);
+
   async function fetchThreadTags(threadId) {
     try {
       const tagsData = await requestGetThreadTags(threadId);
@@ -227,7 +233,7 @@ export function HomePage() {
                 All questions
               </Tabs.Tab>
               <Tabs.Tab className="text-[18px]" value="most">
-                Most viewed
+                Most votes
               </Tabs.Tab>
             </Tabs.List>
 
@@ -316,7 +322,6 @@ export function HomePage() {
                     .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                     .filter((thread) => approvedThreads[thread.pk])
                     .map((thread) => (
-                      
                       <NavLink
                         key={thread.pk}
                         to={thread.path}
@@ -327,7 +332,7 @@ export function HomePage() {
                           className="mr-4 mt-6 w-[330px] h-[150px]"
                           withBorder
                           radius={7}
-                          shadow="sm" 
+                          shadow="sm"
                           padding="md"
                           component="a"
                           target="_blank"
@@ -355,12 +360,15 @@ export function HomePage() {
                             ))}
                           </div>
                           <Text weight={400} size="md">
-                            {format(new Date(thread.fields.created), "MMMM dd, yyyy")}
+                            {format(
+                              new Date(thread.fields.created),
+                              "MMMM dd, yyyy"
+                            )}
                           </Text>
                           <Text weight={500} size="lg">
                             Title: {thread.fields.title}
                           </Text>
-                          
+
                           <div
                             className="mt-[17px] text-gray-400"
                             dangerouslySetInnerHTML={{

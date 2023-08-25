@@ -14,13 +14,14 @@ import { ListResponse } from "../client.ts";
 //console.error("Error fetching threads:", error);
 //});
 //
-export const requestGetAllThreads = (parent: string | number) =>
+export const requestGetAllThreads = (parent: string | number, order?: string) =>
   forumServiceClient
     .get<ListResponse<ThreadFields>>(
       `/models/threads/records/` + (parent ? `?parent=${parent}` : ""),
       {
         params: {
           include_approved_status: true,
+          order: order || "",
         },
       }
     )
@@ -41,3 +42,21 @@ export const requestGetLatestThreads = (parent: string | number) =>
 
 export const getAllThreadsQueryKey = (parent: string | number) =>
   parent ? ["thread", parent, "child"] : ["thread"];
+
+export const requestGetListThreadsMostVotes = (
+  parent: string | number,
+  order?: string,
+  limit?: number
+) =>
+  forumServiceClient
+    .get<ListResponse<ThreadFields>>(
+      `/models/threads/records/` + (parent ? `?parent=${parent}` : ""),
+      {
+        params: {
+          include_approved_status: true,
+          order: order || "",
+          limit: limit || 0,
+        },
+      }
+    )
+    .then((res) => res.data);
