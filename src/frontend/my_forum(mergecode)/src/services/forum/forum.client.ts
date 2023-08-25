@@ -23,7 +23,6 @@ export interface ThreadFields {
   created: string;
   updated: string;
   thread: number;
-  
 }
 
 export interface CreateThreadForm {
