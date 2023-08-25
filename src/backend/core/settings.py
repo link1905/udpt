@@ -206,6 +206,7 @@ if CACHEOPS_ENABLED:
 
     CACHEOPS = {
         "*.*": {"ops": "all", "timeout": 60 * 15},
+        "contenttypes.*": {"ops": (), "timeout": 0},
         "migrations.*": {"ops": (), "timeout": 0},
     }
 
